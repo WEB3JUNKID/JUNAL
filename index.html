@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0914">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <title>Euphoria Journal</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-glow: #b14bf4;
+            --secondary-glow: #00d2ff;
+            --bg-color: #0b0914;
+            --glass-bg: rgba(20, 15, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top left, #1a0b2e 0%, var(--bg-color) 40%, #060b19 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .auth-wrapper, .container {
+            width: 100%; max-width: 800px;
+            box-sizing: border-box; padding: 20px;
+        }
+
+        .auth-box {
+            background: rgba(0,0,0,0.8); padding: 30px;
+            border-radius: 12px; border: 1px solid var(--glass-border);
+            text-align: center; margin-top: 50px;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            min-height: 100vh; display: none;
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;
+        }
+
+        h1 {
+            margin: 0; font-size: 1.8rem;
+            background: linear-gradient(to right, var(--secondary-glow), var(--primary-glow));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        #calendar-info { color: #a09cbb; font-size: 1rem; font-weight: 500; }
+
+        .dashboard {
+            display: flex; justify-content: space-between;
+            background: rgba(0,0,0,0.3); padding: 15px 20px;
+            border-radius: 12px; margin-bottom: 20px;
+            border-left: 4px solid var(--secondary-glow);
+        }
+
+        .stat-box { display: flex; flex-direction: column; }
+        .stat-label { font-size: 0.85rem; color: #a09cbb; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-value { font-size: 1.4rem; font-weight: bold; }
+
+        .chart-wrapper {
+            background: rgba(0,0,0,0.2); padding: 15px;
+            border-radius: 12px; border: 1px solid var(--glass-border);
+            margin-bottom: 25px; height: 250px;
+        }
+
+        form, .auth-form {
+            display: flex; flex-direction: column; gap: 15px;
+            background: rgba(0,0,0,0.2); padding: 20px;
+            border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 25px;
+        }
+
+        input, select, button {
+            padding: 14px 15px; border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff; font-size: 1rem; outline: none;
+            width: 100%; box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-glow);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        select option { background: var(--bg-color); color: #fff; }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.85rem; color: #a09cbb; text-transform: uppercase; }
+
+        #custom-rr-group,
+        #custom-pair-group { display: none; }
+
+        button {
+            background: linear-gradient(45deg, var(--primary-glow), #7a1fd4);
+            cursor: pointer; font-weight: bold;
+            text-transform: uppercase; border: none; margin-top: 5px;
+        }
+
+        .secondary-btn { background: #333; }
+        .logout-btn {
+            background: transparent; border: 1px solid #ff3366;
+            color: #ff3366; padding: 8px 12px; font-size: 0.8rem; width: auto;
+        }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; }
+        th { color: #a09cbb; text-transform: uppercase; font-size: 0.8rem; }
+        .win { color: #00ffcc; font-weight: bold; }
+        .loss { color: #ff3366; font-weight: bold; }
+        .delete-btn {
+            background: transparent; color: #ff3366;
+            padding: 6px; font-size: 0.8rem;
+            border: 1px solid #ff3366; width: auto;
+        }
+
+        /* ── Delete Confirmation Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: #130d26;
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 30px 24px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(177, 75, 244, 0.2);
+        }
+
+        .modal-box p {
+            margin: 0 0 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .modal-box span {
+            font-size: 0.85rem;
+            color: #a09cbb;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            font-size: 0.9rem;
+            margin-top: 0;
+        }
+
+        .modal-yes {
+            background: linear-gradient(45deg, #ff3366, #c0003a) !important;
+            border: none;
+        }
+
+        .modal-no {
+            background: #222 !important;
+            border: 1px solid var(--glass-border) !important;
+            color: #a09cbb !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal-box">
+            <p>Delete this trade?</p>
+            <span>This action cannot be undone.</span>
+            <div class="modal-actions">
+                <button class="modal-yes" id="modal-yes-btn">Yes, Delete</button>
+                <button class="modal-no" id="modal-no-btn">No, Keep</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-wrapper" id="auth-container">
+        <div class="auth-box">
+            <h2>System Login</h2>
+            <div class="auth-form">
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <div style="display: flex; gap: 10px;">
+                    <button id="login-btn">Login</button>
+                    <button id="signup-btn" class="secondary-btn">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="app-container">
+        <header>
+            <div>
+                <h1>Trade Journal</h1>
+                <div id="calendar-info">Loading...</div>
+            </div>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+        </header>
+
+        <div class="dashboard">
+            <div class="stat-box">
+                <span class="stat-label">Monthly PnL</span>
+                <span id="total-rr-display" class="stat-value" style="color: var(--secondary-glow);">0.00 RR</span>
+            </div>
+            <div class="stat-box" style="text-align: right;">
+                <span class="stat-label">Profit Factor</span>
+                <span id="pf-display" class="stat-value">0.00</span>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="equityChart"></canvas>
+        </div>
+
+        <form id="trade-form">
+            <div class="input-group">
+                <label for="pair">Pair</label>
+                <select id="pair" required>
+                    <option value="" disabled selected>Select Pair</option>
+                    <option value="BTC/USD">BTC/USD</option>
+                    <option value="GBP/USD">GBP/USD</option>
+                    <option value="GBP/JPY">GBP/JPY</option>
+                    <option value="USD/JPY">USD/JPY</option>
+                    <option value="USD/CAD">USD/CAD</option>
+                    <option value="EUR/USD">EUR/USD</option>
+                    <option value="AUD/USD">AUD/USD</option>
+                    <option value="GER40">GER40</option>
+                    <option value="Other">Other (Custom)</option>
+                </select>
+            </div>
+
+            <!-- Custom Pair Input — shown only when "Other" is selected -->
+            <div class="input-group" id="custom-pair-group">
+                <label for="custom-pair">Custom Pair Name</label>
+                <input type="text" id="custom-pair" placeholder="e.g. XAU/USD">
+            </div>
+
+            <div class="input-group">
+                <label for="bias">Bias</label>
+                <select id="bias" required>
+                    <option value="" disabled selected>Select Bias</option>
+                    <option value="Long">Long</option>
+                    <option value="Short">Short</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="outcome">Outcome</label>
+                <select id="outcome" required>
+                    <option value="" disabled selected>Win or Loss?</option>
+                    <option value="Win">Win (+)</option>
+                    <option value="Loss">Loss (-1)</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="custom-rr-group">
+                <label for="custom-rr">Profit RR (+)</label>
+                <input type="number" id="custom-rr" step="0.1" min="0.1" placeholder="e.g. 2.5" inputmode="decimal">
+            </div>
+
+            <button type="submit">Log Trade</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Pair</th>
+                        <th>Result</th>
+                        <th>RR</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="trade-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed:', err));
+            });
+        }
+    </script>
+
+    <script type="module">
+        import { auth, db, tradesCol, addDoc, deleteDoc, doc, query, orderBy, where, onSnapshot, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from './firebase.js';
+        import { initChart, updateChart } from './chart.js';
+
+        let trades = [];
+        let currentUser = null;
+        let unsubscribeSnapshot = null;
+        let pendingDeleteId = null; // holds trade ID waiting for modal confirmation
+
+        // DOM Elements
+        const authContainer = document.getElementById('auth-container');
+        const appContainer  = document.getElementById('app-container');
+        const dateDisplay   = document.getElementById('calendar-info');
+        const form          = document.getElementById('trade-form');
+        const outcomeSelect = document.getElementById('outcome');
+        const customRrGroup = document.getElementById('custom-rr-group');
+        const customRrInput = document.getElementById('custom-rr');
+        const pairSelect    = document.getElementById('pair');
+        const customPairGroup = document.getElementById('custom-pair-group');
+        const customPairInput = document.getElementById('custom-pair');
+        const deleteModal   = document.getElementById('delete-modal');
+
+        // ── Calendar Helper ──────────────────────────────────────
+        function getCalendarInfo() {
+            const now = new Date();
+            const month = now.toLocaleString('default', { month: 'long' });
+            const dayOfMonth = now.getDate();
+            let week = Math.ceil(dayOfMonth / 7);
+            if (week > 4) week = 4;
+            return { month, week, fullDate: now.toLocaleDateString() };
+        }
+        dateDisplay.textContent = `${getCalendarInfo().month} - Wk ${getCalendarInfo().week}`;
+
+        // ── Auth State ───────────────────────────────────────────
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                authContainer.style.display = 'none';
+                appContainer.style.display  = 'block';
+                initChart('equityChart');
+                loadUserTrades(user.uid);
+            } else {
+                currentUser = null;
+                authContainer.style.display = 'block';
+                appContainer.style.display  = 'none';
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+            }
+        });
+
+        // ── Auth Actions ─────────────────────────────────────────
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            try {
+                await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+            } catch (error) { alert("Login failed: " + error.message); }
+        });
+
+        document.getElementById('signup-btn').addEventListener('click', async () => {
+            try {
+                await createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+            } catch (error) { alert("Signup failed: " + error.message); }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await signOut(auth);
+        });
+
+        // ── Pair: show custom input when "Other" selected ────────
+        pairSelect.addEventListener('change', () => {
+            if (pairSelect.value === 'Other') {
+                customPairGroup.style.display = 'flex';
+                customPairInput.required = true;
+            } else {
+                customPairGroup.style.display = 'none';
+                customPairInput.required = false;
+                customPairInput.value = '';
+            }
+        });
+
+        // ── Outcome: show RR input on Win ────────────────────────
+        outcomeSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'Win') {
+                customRrGroup.style.display = 'flex';
+                customRrInput.required = true;
+            } else {
+                customRrGroup.style.display = 'none';
+                customRrInput.required = false;
+                customRrInput.value = '';
+            }
+        });
+
+        // ── Delete Modal Logic ───────────────────────────────────
+        function openDeleteModal(tradeId) {
+            pendingDeleteId = tradeId;
+            deleteModal.classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            pendingDeleteId = null;
+            deleteModal.classList.remove('active');
+        }
+
+        document.getElementById('modal-yes-btn').addEventListener('click', async () => {
+            if (pendingDeleteId) {
+                await deleteDoc(doc(db, 'trades', pendingDeleteId));
+            }
+            closeDeleteModal();
+        });
+
+        document.getElementById('modal-no-btn').addEventListener('click', () => {
+            closeDeleteModal();
+        });
+
+        // Close on overlay click (outside the box)
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) closeDeleteModal();
+        });
+
+        // ── Render ───────────────────────────────────────────────
+        function renderDashboard() {
+            const list         = document.getElementById('trade-list');
+            const totalDisplay = document.getElementById('total-rr-display');
+            const pfDisplay    = document.getElementById('pf-display');
+            list.innerHTML = '';
+
+            const currentMonth = getCalendarInfo().month;
+            let monthlyGrossProfit = 0;
+            let monthlyGrossLoss   = 0;
+            let monthlyNetRR       = 0;
+
+            let chartLabels  = ['Start'];
+            let chartData    = [0];
+            let cumulativeRR = 0;
+
+            const sortedTrades = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+
+            sortedTrades.forEach(trade => {
+                cumulativeRR += trade.rr;
+                chartLabels.push(trade.date);
+                chartData.push(cumulativeRR);
+
+                if (trade.month === currentMonth) {
+                    monthlyNetRR += trade.rr;
+                    if (trade.rr > 0) monthlyGrossProfit += trade.rr;
+                    if (trade.rr < 0) monthlyGrossLoss   += Math.abs(trade.rr);
+                }
+            });
+
+            updateChart(chartLabels, chartData);
+
+            let profitFactor;
+            if (monthlyGrossLoss === 0) {
+                profitFactor = monthlyGrossProfit > 0 ? "Max" : "0.00";
+            } else {
+                profitFactor = (monthlyGrossProfit / monthlyGrossLoss).toFixed(2);
+            }
+
+            // Render rows newest first
+            [...sortedTrades].reverse().forEach(trade => {
+                const tr      = document.createElement('tr');
+                const rrClass = trade.outcome === 'Win' ? 'win' : 'loss';
+                const rrPrefix = trade.outcome === 'Win' ? '+' : '';
+
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-size: 0.85rem;">${trade.date}</div>
+                        <div style="font-size: 0.7rem; color: #a09cbb;">Wk ${trade.week}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: bold;">${trade.pair}</div>
+                        <div style="font-size: 0.7rem; color: #a09cbb;">${trade.bias}</div>
+                    </td>
+                    <td class="${rrClass}">${trade.outcome}</td>
+                    <td class="${rrClass}">${rrPrefix}${trade.rr}</td>
+                    <td><button class="delete-btn" data-id="${trade.id}">X</button></td>
+                `;
+                list.appendChild(tr);
+            });
+
+            // Attach modal trigger to each delete button
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    openDeleteModal(id);
+                });
+            });
+
+            totalDisplay.textContent  = `${monthlyNetRR > 0 ? '+' : ''}${monthlyNetRR.toFixed(2)} RR`;
+            totalDisplay.style.color  = monthlyNetRR >= 0 ? '#00ffcc' : '#ff3366';
+            pfDisplay.textContent     = profitFactor;
+        }
+
+        // ── Firestore Listener ───────────────────────────────────
+        function loadUserTrades(uid) {
+            const q = query(tradesCol, where("userId", "==", uid), orderBy('timestamp', 'desc'));
+            unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+                trades = [];
+                snapshot.forEach((d) => {
+                    trades.push({ id: d.id, ...d.data() });
+                });
+                renderDashboard();
+            });
+        }
+
+        // ── Submit Trade ─────────────────────────────────────────
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const pair = pairSelect.value === 'Other'
+                ? customPairInput.value.trim().toUpperCase()
+                : pairSelect.value;
+
+            const bias    = document.getElementById('bias').value;
+            const outcome = document.getElementById('outcome').value;
+            const rrValue = outcome === 'Loss' ? -1 : parseFloat(customRrInput.value);
+            const info    = getCalendarInfo();
+
+            const newTrade = {
+                userId: currentUser.uid,
+                timestamp: Date.now(),
+                date: info.fullDate,
+                month: info.month,
+                week: info.week,
+                pair,
+                bias,
+                outcome,
+                rr: rrValue
+            };
+
+            await addDoc(tradesCol, newTrade);
+            form.reset();
+            customRrGroup.style.display   = 'none';
+            customPairGroup.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
