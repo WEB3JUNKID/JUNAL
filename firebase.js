@@ -1,5 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { 
+    getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, where, onSnapshot,
+    setDoc, getDoc, getDocs, updateDoc // <-- Added these 4 functions here
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -17,4 +20,8 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const tradesCol = collection(db, 'trades');
 
-export { db, auth, tradesCol, addDoc, deleteDoc, doc, query, orderBy, where, onSnapshot, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut };
+export { 
+    db, auth, tradesCol, addDoc, deleteDoc, doc, query, orderBy, where, onSnapshot, 
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut,
+    setDoc, getDoc, getDocs, updateDoc // <-- And exported them here
+};
