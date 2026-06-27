@@ -1,19 +1,20 @@
 {
-  "name": "Euphoria Trade Journal",
-  "short_name": "Journal",
+  "name": "Edge Journal",
+  "short_name": "Edjo",
+  "description": "A trading journal built for psychological discipline and risk management.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0b0914",
-  "theme_color": "#0b0914",
-  "description": "A custom RR trading journal.",
+  "background_color": "#080A0F",
+  "theme_color": "#080A0F",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "./icon.png",
+      "src": "icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "./icon.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
