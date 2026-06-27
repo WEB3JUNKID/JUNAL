@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDGE JOURNAL</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080A0F">
+<link rel="apple-touch-icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080A0F;--surface:#0F1219;--card:#141820;--card-hover:#1A2030;
+  --border:#1E2838;--border-light:#28364A;
+  --amber:#F5A623;--amber-dim:rgba(245,166,35,.1);--amber-glow:rgba(245,166,35,.2);
+  --green:#00C896;--green-dim:rgba(0,200,150,.1);
+  --red:#FF4D6A;--red-dim:rgba(255,77,106,.1);
+  --text:#E8ECF4;--text-sec:#7D8A9C;--text-dim:#3D4E62;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:10px;--r-sm:7px
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:flex}
+
+/* ── AUTH ── */
+#auth-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(245,166,35,.07) 0%,transparent 70%),var(--bg)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo-mark{width:40px;height:40px;background:var(--amber);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#000;letter-spacing:-1px;flex-shrink:0}
+.logo-name{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.auth-tagline{color:var(--text-sec);font-size:12px;margin-bottom:28px;letter-spacing:.2px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:26px;width:100%;max-width:390px}
+.auth-tabs{display:flex;background:var(--surface);border-radius:var(--r-sm);padding:3px;margin-bottom:22px}
+.auth-tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:500;color:var(--text-sec);border-radius:5px;cursor:pointer;transition:all .18s;border:none;background:none;font-family:var(--font)}
+.auth-tab.active{background:var(--card);color:var(--text);border:1px solid var(--border)}
+
+/* ── FORM BASE ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;transition:border-color .18s;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amber)}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237D8A9C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field select option{background:var(--card)}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6}
+.err-msg{color:var(--red);font-size:12px;margin-top:6px;min-height:16px}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:11px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.1px}
+.btn-primary{background:var(--amber);color:#000}
+.btn-primary:hover{background:#FDB94A;transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,.3)}
+.btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border-light);background:var(--card-hover)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,77,106,.25)}
+.btn-danger:hover{background:rgba(255,77,106,.2)}
+.btn-sm{width:auto;padding:6px 14px;font-size:12px}
+
+/* ── ONBOARDING ── */
+#onboarding-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.ob-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px;width:100%;max-width:440px}
+.welcome-h{font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
+.welcome-h span{color:var(--amber)}
+.psych-quote{font-size:12.5px;color:var(--text-sec);line-height:1.7;border-left:2px solid var(--amber);padding-left:12px;margin:12px 0 22px;font-style:italic}
+.risk-preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:15px;margin:12px 0;display:none}
+.risk-preview.on{display:block}
+.rp-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:600}
+.rp-value{font-size:26px;font-weight:700;color:var(--amber);font-family:var(--mono);letter-spacing:-1px}
+.rp-formula{font-size:11px;color:var(--text-dim);margin-top:3px;font-family:var(--mono)}
+
+/* ── APP SHELL ── */
+#app-screen{flex-direction:column;min-height:100vh}
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-logo-mark{width:30px;height:30px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0}
+.hdr-logo-name{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hdr-user{font-size:12px;color:var(--text-sec)}
+.hdr-user span{color:var(--amber);font-weight:600}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-sec);font-size:11px;padding:4px 9px;cursor:pointer;font-family:var(--font);transition:all .18s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ── DRAWDOWN METER (signature element) ── */
+.dd-meter{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 18px;display:flex;align-items:center;gap:14px}
+.dd-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;font-weight:600;white-space:nowrap}
+.dd-bar-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.dd-bar{height:100%;border-radius:3px;background:var(--green);transition:width .5s ease,background .3s}
+.dd-bar.warn{background:var(--amber)}
+.dd-bar.danger{background:var(--red)}
+.dd-vals{font-family:var(--mono);font-size:11px;color:var(--text-sec);white-space:nowrap}
+.dd-vals .used{color:var(--text);font-weight:500}
+
+/* ── NAV TABS ── */
+.nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:11px 15px;font-size:13px;font-weight:500;color:var(--text-sec);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:2px solid transparent;white-space:nowrap;transition:all .18s}
+.nav-tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+.nav-tab:hover:not(.active){color:var(--text)}
+
+/* ── CONTENT ── */
+.app-content{flex:1;padding:18px;max-width:880px;margin:0 auto;width:100%}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+@media(min-width:580px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.sl{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;font-weight:600}
+.sv{font-size:21px;font-weight:700;font-family:var(--mono);letter-spacing:-.5px}
+.sv.pos{color:var(--green)}
+.sv.neg{color:var(--red)}
+.sv.neu{color:var(--text)}
+.sv.amb{color:var(--amber)}
+.ss{font-size:11px;color:var(--text-sec);margin-top:3px}
+
+/* ── SECTION LABELS ── */
+.sec-title{font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px}
+
+/* ── SPLIT GRID ── */
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.split-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.split-title{font-size:11px;color:var(--text-sec);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.dir-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.dir-badge.long{background:rgba(0,200,150,.15);color:var(--green)}
+.dir-badge.short{background:rgba(255,77,106,.15);color:var(--red)}
+.split-val{font-size:19px;font-weight:700;font-family:var(--mono)}
+.split-sub{font-size:11px;color:var(--text-sec);margin-top:3px}
+
+/* ── PAIR BREAKDOWN ── */
+.pair-breakdown{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:18px}
+.pair-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);gap:10px}
+.pair-row:last-child{border-bottom:none}
+.pair-name{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--amber);width:76px;flex-shrink:0}
+.pair-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.pair-bar{height:100%;border-radius:2px}
+.pair-bar.pos{background:var(--green)}
+.pair-bar.neg{background:var(--red)}
+.pair-rr{font-family:var(--mono);font-size:12px;font-weight:600;width:54px;text-align:right;flex-shrink:0}
+.pair-meta{font-size:11px;color:var(--text-sec);width:56px;text-align:right;flex-shrink:0}
+.pair-money{font-family:var(--mono);font-size:11px;width:72px;text-align:right;flex-shrink:0}
+
+/* ── DASH ACTIONS ── */
+.dash-actions{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.dash-actions .btn{width:auto;flex:1;min-width:130px}
+
+/* ── LOG TRADE ── */
+.log-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;max-width:540px}
+.log-h{font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px}
+.log-sub{font-size:12px;color:var(--text-sec);margin-bottom:20px}
+.toggle-group{display:flex;gap:7px;margin-bottom:4px}
+.tgl{flex:1;padding:10px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-sec);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s}
+.tgl.a-long{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.tgl.a-short{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.tgl.a-profit{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.tgl.a-loss{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.trade-preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;margin:14px 0;display:none}
+.trade-preview.on{display:block}
+.tp-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;font-weight:600}
+.tp-value{font-size:19px;font-weight:700;font-family:var(--mono)}
+.tp-value.pos{color:var(--green)}
+.tp-value.neg{color:var(--red)}
+
+/* ── JOURNAL ── */
+.jnl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.jnl-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.jnl-count{font-size:12px;color:var(--text-sec)}
+.filter-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-pill{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--text-sec);cursor:pointer;white-space:nowrap;transition:all .18s;font-family:var(--font)}
+.filter-pill.active{background:var(--amber-dim);border-color:var(--amber);color:var(--amber)}
+.jnl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.jnl-scroll{overflow-x:auto}
+.jnl-table{width:100%;border-collapse:collapse;font-size:13px}
+.jnl-table th{text-align:left;padding:9px 12px;font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap}
+.jnl-table td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.jnl-table tr:last-child td{border-bottom:none}
+.jnl-table tr:hover td{background:var(--card-hover)}
+.pair-tag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-dim);padding:2px 7px;border-radius:4px;white-space:nowrap}
+.rr-v{font-family:var(--mono);font-weight:600}
+.rr-v.pos{color:var(--green)}
+.rr-v.neg{color:var(--red)}
+.money-v{font-family:var(--mono);font-weight:600}
+.money-v.pos{color:var(--green)}
+.money-v.neg{color:var(--red)}
+.reason-cell{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-sec);font-size:12px;cursor:pointer}
+.reason-cell:hover{color:var(--text)}
+.btn-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:3px 5px;border-radius:4px;transition:all .18s;line-height:1}
+.btn-del:hover{color:var(--red);background:var(--red-dim)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:var(--text-sec)}
+.empty-icon{font-size:28px;margin-bottom:10px}
+.empty-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px}
+.empty-text{font-size:12px}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav-btn{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font);font-size:12px;transition:all .18s;font-weight:500}
+.cal-nav-btn:hover{border-color:var(--amber);color:var(--amber)}
+.cal-month-lbl{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.cal-grid{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+.cal-hdr-cell{padding:9px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{min-height:68px;padding:7px 5px 5px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);position:relative}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-day{font-size:11px;font-weight:500;color:var(--text-sec);margin-bottom:3px}
+.cal-cell.today .cal-day{color:var(--amber);font-weight:700}
+.cal-cell.other .cal-day{color:var(--text-dim)}
+.cal-dots{display:flex;flex-wrap:wrap;gap:2px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot.profit{background:var(--green)}
+.cal-dot.loss{background:var(--red)}
+.cal-pnl{font-size:9px;font-family:var(--mono);font-weight:600;margin-top:2px}
+.cal-pnl.pos{color:var(--green)}
+.cal-pnl.neg{color:var(--red)}
+.week-summary{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:14px}
+.week-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.week-row:last-child{border-bottom:none}
+.week-label{font-size:12px;color:var(--text-sec);font-weight:500}
+.week-stats{display:flex;gap:14px;font-size:12px;font-family:var(--mono)}
+
+/* ── SETTINGS ── */
+.settings-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;max-width:460px}
+.settings-h{font-size:15px;font-weight:700;margin-bottom:3px}
+.settings-sub{font-size:12px;color:var(--text-sec);margin-bottom:18px}
+.danger-zone{margin-top:22px;padding-top:22px;border-top:1px solid var(--border)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;width:100%;max-width:440px}
+.modal-h{font-size:15px;font-weight:700;margin-bottom:3px}
+.modal-sub{font-size:12px;color:var(--text-sec);margin-bottom:18px}
+.modal-actions{display:flex;gap:8px;margin-top:18px}
+.modal-actions .btn{flex:1}
+.import-area{border:2px dashed var(--border);border-radius:var(--r-sm);padding:22px;text-align:center;cursor:pointer;transition:all .2s;display:block}
+.import-area:hover{border-color:var(--amber);background:var(--amber-dim)}
+.import-area input{display:none}
+.import-icon{font-size:22px;margin-bottom:7px}
+.import-text{font-size:13px;color:var(--text-sec)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 15px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 8px 28px rgba(0,0,0,.5);transform:translateY(70px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);max-width:270px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--amber)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
+
+@media(max-width:480px){
+  .app-content{padding:12px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .split-grid{grid-template-columns:1fr}
+  .cal-cell{min-height:52px}
+  .log-card,.settings-card{padding:16px}
+  .pair-meta,.pair-money{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║           AUTH SCREEN               ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div id="auth-screen" class="screen">
+  <div class="auth-logo">
+    <div class="logo-mark">EJ</div>
+    <div class="logo-name">EDGE JOURNAL</div>
+  </div>
+  <div class="auth-tagline">Your edge is your discipline. Track it.</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <div id="login-form">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="li-user" placeholder="your_username" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="err-msg" id="li-err"></div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="su-user" placeholder="choose_username" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="su-pass" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input type="password" id="su-conf" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="err-msg" id="su-err"></div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="doSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════
+════════════════════════════════════╗ -->
+<div id="onboarding-screen" class="screen">
+  <div class="auth-logo">
+    <div class="logo-mark">LL</div>
+    <div class="logo-name">Liquidity Log</div>
+  </div>
+  <div class="ob-card">
+    <div class="welcome-h">Welcome, <span id="ob-username">Trader</span>.</div>
+    <div class="psych-quote">"Amateurs focus on how much money they can make. Professionals focus on how much money they could lose." Protect the capital.</div>
+    
+    <div class="field">
+      <label>Initial Account Size ($)</label>
+      <input type="number" id="ob-acc-size" placeholder="e.g. 10000" min="1">
+    </div>
+    <div class="field">
+      <label>Maximum Allowed Drawdown (%)</label>
+      <input type="number" id="ob-max-dd" placeholder="e.g. 10" min="1" max="100" step="0.1">
+    </div>
+
+    <div class="risk-preview" id="ob-risk-preview">
+      <div class="rp-label">Calculated Risk Per Trade</div>
+      <div class="rp-value" id="ob-risk-val">0.00%</div>
+      <div class="rp-formula">Based on: (Max Drawdown / 2) / 10</div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top:10px" onclick="saveOnboarding()">Initialize Account</button>
+  </div>
+</div>
+
+<div id="app-screen" class="screen">
+  <div class="app-header">
+    <div class="hdr-logo">
+      <div class="hdr-logo-mark">LL</div>
+      <div class="hdr-logo-name">Liquidity Log</div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-user">Trader: <span id="hdr-username">User</span></div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="dd-meter">
+    <div class="dd-label">Drawdown</div>
+    <div class="dd-bar-wrap">
+      <div class="dd-bar" id="dd-bar-fill" style="width: 0%;"></div>
+    </div>
+    <div class="dd-vals">
+      <span class="used" id="dd-current">0.0%</span> / <span id="dd-max">10.0%</span>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('dash')">Dashboard</button>
+    <button class="nav-tab" onclick="switchTab('log')">Log Trade</button>
+    <button class="nav-tab" onclick="switchTab('journal')">Journal</button>
+    <button class="nav-tab" onclick="switchTab('calendar')">Calendar</button>
+  </div>
+
+  <div class="app-content">
+    
+    <div id="tab-dash" class="tab-panel active">
+      <div class="dash-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportMonthlyCSV()">Export Monthly CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">Reset All Data</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="sl">Net P&L</div>
+          <div class="sv neu" id="dash-pnl">$0.00</div>
+          <div class="ss" id="dash-acc-size">Acc: $0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="sl">Total RR</div>
+          <div class="sv neu" id="dash-rr">0.00</div>
+          <div class="ss">Risk Multiplier</div>
+        </div>
+        <div class="stat-card">
+          <div class="sl">Win Rate</div>
+          <div class="sv neu" id="dash-wr">0%</div>
+          <div class="ss" id="dash-total-trades">0 Trades</div>
+        </div>
+        <div class="stat-card">
+          <div class="sl">Risk Per Trade</div>
+          <div class="sv amb" id="dash-rpt">0.00%</div>
+          <div class="ss" id="dash-rpt-dollar">$0.00</div>
+        </div>
+      </div>
+
+      <div class="sec-title">Performance Split</div>
+      <div class="split-grid">
+        <div class="split-card">
+          <div class="split-title"><span class="dir-badge long">Long</span> Edge</div>
+          <div class="split-val" id="dash-long-pnl">$0.00</div>
+          <div class="split-sub" id="dash-long-rr">0.00 RR from 0 trades</div>
+        </div>
+        <div class="split-card">
+          <div class="split-title"><span class="dir-badge short">Short</span> Edge</div>
+          <div class="split-val" id="dash-short-pnl">$0.00</div>
+          <div class="split-sub" id="dash-short-rr">0.00 RR from 0 trades</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-log" class="tab-panel">
+      <div class="log-card">
+        <div class="log-h">Execute & Document</div>
+        <div class="log-sub">Log your parameters. Honesty is the only way to build an edge.</div>
+        
+        <div class="field">
+          <label>Pair / Ticker</label>
+          <select id="log-pair" onchange="toggleCustomPair()">
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="CUSTOM">Custom Pair...</option>
+          </select>
+        </div>
+        <div class="field" id="custom-pair-wrap" style="display:none">
+          <label>Custom Pair</label>
+          <input type="text" id="log-custom-pair" placeholder="e.g. XAUUSD, BTCUSD" style="text-transform:uppercase">
+        </div>
+
+        <div class="field">
+          <label>Direction</label>
+          <div class="toggle-group">
+            <button class="tgl a-long" id="tgl-long" onclick="setDirection('Long')">Long</button>
+            <button class="tgl" id="tgl-short" onclick="setDirection('Short')">Short</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Outcome</label>
+          <div class="toggle-group">
+            <button class="tgl a-profit" id="tgl-profit" onclick="setOutcome('Profit')">Profit</button>
+            <button class="tgl" id="tgl-loss" onclick="setOutcome('Loss')">Loss (-1 RR)</button>
+          </div>
+        </div>
+
+        <div class="field" id="rr-wrap">
+          <label>Reward Captured (RR)</label>
+          <input type="number" id="log-rr" placeholder="e.g. 2.5" min="0.1" step="0.1">
+        </div>
+
+        <div class="field">
+          <label>Trading Rationale & Details</label>
+          <textarea id="log-reason" placeholder="Why did you take this trade? Did you follow your rules? How was your psychology?"></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="submitTrade()">Log Trade</button>
+      </div>
+    </div>
+
+    <div id="tab-journal" class="tab-panel">
+      <div class="jnl-header">
+        <div class="jnl-title">Trade History</div>
+      </div>
+      <div class="jnl-wrap">
+        <div class="jnl-scroll">
+          <table class="jnl-table" id="journal-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Pair</th>
+                <th>Dir</th>
+                <th>Outcome</th>
+                <th>RR</th>
+                <th>P&L</th>
+                <th>Rationale</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="journal-body">
+              </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="journal-empty" class="empty" style="display:none">
+        <div class="empty-icon">📝</div>
+        <div class="empty-title">No trades logged yet</div>
+        <div class="empty-text">Execute your edge and log it here.</div>
+      </div>
+    </div>
+
+    <div id="tab-calendar" class="tab-panel">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">Prev</button>
+        <div class="cal-month-lbl" id="cal-month-label">Month Year</div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">Next</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-hdr">
+          <div class="cal-hdr-cell">Sun</div><div class="cal-hdr-cell">Mon</div><div class="cal-hdr-cell">Tue</div>
+          <div class="cal-hdr-cell">Wed</div><div class="cal-hdr-cell">Thu</div><div class="cal-hdr-cell">Fri</div>
+          <div class="cal-hdr-cell">Sat</div>
+        </div>
+        <div class="cal-body" id="cal-body">
+          </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">Message</div>
+
+<script>
+/* ── GLOBAL STATE ── */
+let currentUser = null;
+let currentDirection = 'Long';
+let currentOutcome = 'Profit';
+let currentDate = new Date();
+
+// Setup initial event listeners
+document.getElementById('ob-max-dd').addEventListener('input', updateRiskPreview);
+document.getElementById('ob-acc-size').addEventListener('input', updateRiskPreview);
+
+/* ── INITIALIZATION ── */
+window.onload = () => {
+  const loggedIn = localStorage.getItem('ll_currentUser');
+  if (loggedIn) {
+    currentUser = JSON.parse(localStorage.getItem(`ll_user_${loggedIn}`));
+    if (currentUser.onboarded) {
+      showScreen('app-screen');
+      initApp();
+    } else {
+      showScreen('onboarding-screen');
+      document.getElementById('ob-username').innerText = currentUser.username;
+    }
+  } else {
+    showScreen('auth-screen');
+  }
+};
+
+/* ── UTILS ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function formatMoney(amount) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+}
+
+/* ── AUTH ── */
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  event.target.classList.add('active');
+}
+
+function doLogin() {
+  const u = document.getElementById('li-user').value.trim();
+  const p = document.getElementById('li-pass').value;
+  const err = document.getElementById('li-err');
+  
+  if(!u || !p) return err.innerText = "Fields cannot be empty.";
+  const userData = localStorage.getItem(`ll_user_${u}`);
+  
+  if (userData) {
+    const user = JSON.parse(userData);
+    if (user.password === p) {
+      localStorage.setItem('ll_currentUser', u);
+      currentUser = user;
+      err.innerText = "";
+      if(user.onboarded) { showScreen('app-screen'); initApp(); }
+      else { showScreen('onboarding-screen'); document.getElementById('ob-username').innerText = u; }
+    } else err.innerText = "Incorrect password.";
+  } else err.innerText = "User not found.";
+}
+
+function doSignup() {
+  const u = document.getElementById('su-user').value.trim();
+  const p = document.getElementById('su-pass').value;
+  const c = document.getElementById('su-conf').value;
+  const err = document.getElementById('su-err');
+
+  if(!u || !p) return err.innerText = "Fields cannot be empty.";
+  if(p !== c) return err.innerText = "Passwords do not match.";
+  if(localStorage.getItem(`ll_user_${u}`)) return err.innerText = "Username taken.";
+
+  const newUser = { username: u, password: p, onboarded: false, trades: [] };
+  localStorage.setItem(`ll_user_${u}`, JSON.stringify(newUser));
+  localStorage.setItem('ll_currentUser', u);
+  currentUser = newUser;
+  
+  showScreen('onboarding-screen');
+  document.getElementById('ob-username').innerText = u;
+}
+
+function logout() {
+  localStorage.removeItem('ll_currentUser');
+  currentUser = null;
+  showScreen('auth-screen');
+  document.getElementById('li-user').value = '';
+  document.getElementById('li-pass').value = '';
+}
+
+/* ── ONBOARDING ── */
+function updateRiskPreview() {
+  const dd = parseFloat(document.getElementById('ob-max-dd').value);
+  const preview = document.getElementById('ob-risk-preview');
+  const val = document.getElementById('ob-risk-val');
+  
+  if (dd > 0) {
+    // Risk per trade % = drawdown / 2 / 10
+    const risk = (dd / 2) / 10;
+    val.innerText = `${risk.toFixed(2)}%`;
+    preview.classList.add('on');
+  } else {
+    preview.classList.remove('on');
+  }
+}
+
+function saveOnboarding() {
+  const acc = parseFloat(document.getElementById('ob-acc-size').value);
+  const dd = parseFloat(document.getElementById('ob-max-dd').value);
+  if (!acc || !dd || dd <= 0 || acc <= 0) return showToast("Enter valid numbers.", "error");
+
+  currentUser.initialAccount = acc;
+  currentUser.maxDrawdown = dd;
+  currentUser.riskPerTradePct = (dd / 2) / 10;
+  currentUser.onboarded = true;
+  currentUser.trades = [];
+
+  saveUser();
+  showScreen('app-screen');
+  initApp();
+  showToast("Account initialized.", "success");
+}
+
+function saveUser() {
+  localStorage.setItem(`ll_user_${currentUser.username}`, JSON.stringify(currentUser));
+}
+
+/* ── APP CORE ── */
+function initApp() {
+  document.getElementById('hdr-username').innerText = currentUser.username;
+  refreshAll();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if(tab === 'calendar') renderCalendar();
+}
+
+function refreshAll() {
+  renderDashboard();
+  renderJournal();
+  updateDrawdown();
+  if(document.getElementById('tab-calendar').classList.contains('active')) renderCalendar();
+}
+
+/* ── LOGGING TRADES ── */
+function toggleCustomPair() {
+  const val = document.getElementById('log-pair').value;
+  document.getElementById('custom-pair-wrap').style.display = val === 'CUSTOM' ? 'block' : 'none';
+}
+
+function setDirection(dir) {
+  currentDirection = dir;
+  document.getElementById('tgl-long').className = `tgl ${dir==='Long'?'a-long':''}`;
+  document.getElementById('tgl-short').className = `tgl ${dir==='Short'?'a-short':''}`;
+}
+
+function setOutcome(out) {
+  currentOutcome = out;
+  document.getElementById('tgl-profit').className = `tgl ${out==='Profit'?'a-profit':''}`;
+  document.getElementById('tgl-loss').className = `tgl ${out==='Loss'?'a-loss':''}`;
+  document.getElementById('rr-wrap').style.display = out === 'Loss' ? 'none' : 'block';
+}
+
+function submitTrade() {
+  let pair = document.getElementById('log-pair').value;
+  if(pair === 'CUSTOM') pair = document.getElementById('log-custom-pair').value.toUpperCase();
+  if(!pair) return showToast("Enter a pair.", "error");
+
+  let rr = -1;
+  if (currentOutcome === 'Profit') {
+    rr = parseFloat(document.getElementById('log-rr').value);
+    if (!rr || rr <= 0) return showToast("Enter a valid RR.", "error");
+  }
+
+  const reason = document.getElementById('log-reason').value.trim();
+  
+  // Math: Dollar risk = RiskPct * CurrentAccountSize
+  const currentAccSize = getCurrentAccountSize();
+  const dollarRisk = (currentUser.riskPerTradePct / 100) * currentAccSize;
+  const pnl = rr * dollarRisk;
+
+  const trade = {
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    pair,
+    direction: currentDirection,
+    outcome: currentOutcome,
+    rr,
+    pnl,
+    reason
+  };
+
+  currentUser.trades.push(trade);
+  saveUser();
+  
+  // Reset form
+  document.getElementById('log-rr').value = '';
+  document.getElementById('log-reason').value = '';
+  document.getElementById('log-custom-pair').value = '';
+  
+  showToast("Trade Logged!", "success");
+  refreshAll();
+  switchTab('dash');
+}
+
+function deleteTrade(id) {
+  if(!confirm("Delete this trade?")) return;
+  currentUser.trades = currentUser.trades.filter(t => t.id !== id);
+  saveUser();
+  refreshAll();
+  showToast("Trade deleted.", "info");
+}
+
+/* ── CALCULATIONS & DASHBOARD ── */
+function getCurrentAccountSize() {
+  let totalPnl = currentUser.trades.reduce((sum, t) => sum + t.pnl, 0);
+  return currentUser.initialAccount + totalPnl;
+}
+
+function updateDrawdown() {
+  let peak = currentUser.initialAccount;
+  let current = currentUser.initialAccount;
+  let maxDD = 0;
+
+  for (let t of currentUser.trades) {
+    current += t.pnl;
+    if (current > peak) peak = current;
+    let dd = ((peak - current) / peak) * 100;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  const allowed = currentUser.maxDrawdown;
+  const pctUsed = (maxDD / allowed) * 100;
+  
+  const bar = document.getElementById('dd-bar-fill');
+  bar.style.width = `${Math.min(pctUsed, 100)}%`;
+  
+  if (pctUsed > 80) bar.className = 'dd-bar danger';
+  else if (pctUsed > 50) bar.className = 'dd-bar warn';
+  else bar.className = 'dd-bar';
+
+  document.getElementById('dd-current').innerText = `${maxDD.toFixed(1)}%`;
+  document.getElementById('dd-max').innerText = `${allowed.toFixed(1)}%`;
+}
+
+function renderDashboard() {
+  const trades = currentUser.trades;
+  const totalPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
+  const totalRR = trades.reduce((sum, t) => sum + t.rr, 0);
+  const wins = trades.filter(t => t.outcome === 'Profit').length;
+  const winRate = trades.length ? ((wins / trades.length) * 100).toFixed(1) : 0;
+  const currentAcc = currentUser.initialAccount + totalPnl;
+
+  const longs = trades.filter(t => t.direction === 'Long');
+  const shorts = trades.filter(t => t.direction === 'Short');
+  
+  const longPnl = longs.reduce((sum, t) => sum + t.pnl, 0);
+  const longRR = longs.reduce((sum, t) => sum + t.rr, 0);
+  
+  const shortPnl = shorts.reduce((sum, t) => sum + t.pnl, 0);
+  const shortRR = shorts.reduce((sum, t) => sum + t.rr, 0);
+
+  const dollarRisk = (currentUser.riskPerTradePct / 100) * currentAcc;
+
+  // UI Updates
+  document.getElementById('dash-pnl').innerText = formatMoney(totalPnl);
+  document.getElementById('dash-pnl').className = `sv ${totalPnl >= 0 ? 'pos' : 'neg'}`;
+  document.getElementById('dash-acc-size').innerText = `Acc: ${formatMoney(currentAcc)}`;
+  
+  document.getElementById('dash-rr').innerText = totalRR > 0 ? `+${totalRR.toFixed(2)}R` : `${totalRR.toFixed(2)}R`;
+  document.getElementById('dash-rr').className = `sv ${totalRR >= 0 ? 'pos' : 'neg'}`;
+  
+  document.getElementById('dash-wr').innerText = `${winRate}%`;
+  document.getElementById('dash-total-trades').innerText = `${trades.length} Trades`;
+  
+  document.getElementById('dash-rpt').innerText = `${currentUser.riskPerTradePct.toFixed(2)}%`;
+  document.getElementById('dash-rpt-dollar').innerText = formatMoney(dollarRisk);
+
+  document.getElementById('dash-long-pnl').innerText = formatMoney(longPnl);
+  document.getElementById('dash-long-rr').innerText = `${longRR.toFixed(2)} RR from ${longs.length} trades`;
+  
+  document.getElementById('dash-short-pnl').innerText = formatMoney(shortPnl);
+  document.getElementById('dash-short-rr').innerText = `${shortRR.toFixed(2)} RR from ${shorts.length} trades`;
+}
+
+function renderJournal() {
+  const tbody = document.getElementById('journal-body');
+  const empty = document.getElementById('journal-empty');
+  tbody.innerHTML = '';
+  
+  if(currentUser.trades.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  const reversed = [...currentUser.trades].reverse();
+
+  reversed.forEach(t => {
+    const d = new Date(t.date).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+    const rrClass = t.rr >= 0 ? 'pos' : 'neg';
+    const rrText = t.rr > 0 ? `+${t.rr}R` : `${t.rr}R`;
+    
+    tbody.innerHTML += `
+      <tr>
+        <td style="color:var(--text-dim);font-size:11px">${d}</td>
+        <td><span class="pair-tag">${t.pair}</span></td>
+        <td><span class="dir-badge ${t.direction.toLowerCase()}">${t.direction}</span></td>
+        <td style="font-weight:600;color:var(--${t.outcome==='Profit'?'green':'red'})">${t.outcome}</td>
+        <td class="rr-v ${rrClass}">${rrText}</td>
+        <td class="money-v ${rrClass}">${formatMoney(t.pnl)}</td>
+        <td class="reason-cell" title="${t.reason}">${t.reason || '-'}</td>
+        <td><button class="btn-del" onclick="deleteTrade('${t.id}')">✕</button></td>
+      </tr>
+    `;
+  });
+}
+
+
+/* ── CALENDAR ── */
+function changeMonth(dir) {
+  currentDate.setMonth(currentDate.getMonth() + dir);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  document.getElementById('cal-month-label').innerText = new Date(year, month).toLocaleDateString(undefined, {month:'long', year:'numeric'});
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const body = document.getElementById('cal-body');
+  body.innerHTML = '';
+
+  // Get trades for this month map by date
+  const tradesByDate = {};
+  currentUser.trades.forEach(t => {
+    const d = new Date(t.date);
+    if(d.getFullYear() === year && d.getMonth() === month) {
+      const day = d.getDate();
+      if(!tradesByDate[day]) tradesByDate[day] = [];
+      tradesByDate[day].push(t);
+    }
+  });
+
+  let dayCount = 1;
+  const today = new Date();
+
+  for (let i = 0; i < 42; i++) {
+    const cell = document.createElement('div');
+    if (i >= firstDay && dayCount <= daysInMonth) {
+      cell.className = 'cal-cell';
+      if(year === today.getFullYear() && month === today.getMonth() && dayCount === today.getDate()) {
+        cell.classList.add('today');
+      }
+      
+      let html = `<div class="cal-day">${dayCount}</div><div class="cal-dots">`;
+      
+      const dayTrades = tradesByDate[dayCount] || [];
+      let dayPnl = 0;
+      
+      dayTrades.forEach(tr => {
+        html += `<div class="cal-dot ${tr.outcome==='Profit'?'profit':'loss'}"></div>`;
+        dayPnl += tr.pnl;
+      });
+      html += `</div>`;
+      
+      if(dayTrades.length > 0) {
+        html += `<div class="cal-pnl ${dayPnl>=0?'pos':'neg'}">${dayPnl>=0?'+':''}${formatMoney(dayPnl)}</div>`;
+      }
+      
+      cell.innerHTML = html;
+      dayCount++;
+    } else {
+      cell.className = 'cal-cell other';
+    }
+    body.appendChild(cell);
+  }
+}
+
+/* ── EXPORT CSV ── */
+function exportMonthlyCSV() {
+  if (currentUser.trades.length === 0) return showToast("No trades to export.", "error");
+
+  // Summary Data
+  const trades = currentUser.trades;
+  const totalRR = trades.reduce((s, t) => s + t.rr, 0);
+  const totalPnl = trades.reduce((s, t) => s + t.pnl, 0);
+  const longs = trades.filter(t => t.direction === 'Long');
+  const shorts = trades.filter(t => t.direction === 'Short');
+  const longPnl = longs.reduce((s,t) => s + t.pnl, 0);
+  const shortPnl = shorts.reduce((s,t) => s + t.pnl, 0);
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+  
+  // Headers
+  csvContent += "LIQUIDITY LOG MONTHLY PERFORMANCE EXPORT\r\n\r\n";
+  csvContent += `Total Trades,${trades.length}\r\n`;
+  csvContent += `Total RR,${totalRR.toFixed(2)}\r\n`;
+  csvContent += `Total P&L,${totalPnl.toFixed(2)}\r\n`;
+  csvContent += `Most Profits From,${longPnl > shortPnl ? 'Longs' : 'Shorts'}\r\n\r\n`;
+  
+  csvContent += "Date,Pair,Direction,Outcome,RR,P&L,Reason\r\n";
+
+  trades.forEach(t => {
+    let date = new Date(t.date).toLocaleString().replace(",", "");
+    let safeReason = `"${t.reason.replace(/"/g, '""')}"`; // Escape commas in text
+    let row = `${date},${t.pair},${t.direction},${t.outcome},${t.rr},${t.pnl},${safeReason}`;
+    csvContent += row + "\r\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  const month = new Date().toLocaleString('default', { month: 'long' });
+  link.setAttribute("download", `LiquidityLog_${month}_Export.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast("CSV Downloaded.", "success");
+}
+
+function clearAllData() {
+  if(confirm("WARNING: This will delete ALL logged trades. This cannot be undone. Proceed?")) {
+    currentUser.trades = [];
+    saveUser();
+    refreshAll();
+    showToast("Data reset complete.", "info");
+  }/* ── PWA SERVICE WORKER REGISTRATION ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => {
+        console.log('ServiceWorker registered with scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.log('ServiceWorker registration failed:', error);
+      });
+  });
+}
+
+}
+</script>
+</body>
+</html>
