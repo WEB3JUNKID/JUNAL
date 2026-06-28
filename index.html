@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDGE JOURNAL</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080A0F">
+<link rel="apple-touch-icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080A0F;--surface:#0F1219;--card:#141820;--card-hover:#1A2030;
+  --border:#1E2838;--border-light:#28364A;
+  --amber:#F5A623;--amber-dim:rgba(245,166,35,.1);--amber-glow:rgba(245,166,35,.2);
+  --green:#00C896;--green-dim:rgba(0,200,150,.1);
+  --red:#FF4D6A;--red-dim:rgba(255,77,106,.1);
+  --text:#E8ECF4;--text-sec:#7D8A9C;--text-dim:#3D4E62;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:10px;--r-sm:7px
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.active{display:flex}
+
+/* ── AUTH ── */
+#auth-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(ellipse 70% 40% at 50% -10%,rgba(245,166,35,.07) 0%,transparent 70%),var(--bg)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo-mark{width:40px;height:40px;background:var(--amber);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#000;letter-spacing:-1px;flex-shrink:0}
+.logo-name{font-size:20px;font-weight:700;letter-spacing:-.5px}
+.auth-tagline{color:var(--text-sec);font-size:12px;margin-bottom:28px;letter-spacing:.2px}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:26px;width:100%;max-width:390px}
+.auth-tabs{display:flex;background:var(--surface);border-radius:var(--r-sm);padding:3px;margin-bottom:22px}
+.auth-tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:500;color:var(--text-sec);border-radius:5px;cursor:pointer;transition:all .18s;border:none;background:none;font-family:var(--font)}
+.auth-tab.active{background:var(--card);color:var(--text);border:1px solid var(--border)}
+
+/* ── FORM BASE ── */
+.field{margin-bottom:14px; position:relative;}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;transition:border-color .18s;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amber)}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237D8A9C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field select option{background:var(--card)}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6}
+.err-msg{color:var(--red);font-size:12px;margin-top:6px;min-height:16px}
+.badge-click{position:absolute; right:10px; top:2px; font-size:10px; background:var(--amber-dim); color:var(--amber); padding:2px 6px; border-radius:4px; cursor:pointer; font-weight:700;}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:11px;border-radius:var(--r-sm);border:none;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.1px}
+.btn-primary{background:var(--amber);color:#000}
+.btn-primary:hover{background:#FDB94A;transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,.3)}
+.btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border-light);background:var(--card-hover)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,77,106,.25)}
+.btn-danger:hover{background:rgba(255,77,106,.2)}
+.btn-sm{width:auto;padding:6px 14px;font-size:12px}
+
+/* ── ONBOARDING / NEW ACCOUNT ── */
+#onboarding-screen{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px; padding-top:40px;}
+.ob-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px;width:100%;max-width:440px}
+.welcome-h{font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
+.welcome-h span{color:var(--amber)}
+.psych-quote{font-size:12.5px;color:var(--text-sec);line-height:1.7;border-left:2px solid var(--amber);padding-left:12px;margin:12px 0 22px;font-style:italic}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+/* ── APP SHELL ── */
+#app-screen{flex-direction:column;min-height:100vh}
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-logo-mark{width:30px;height:30px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0}
+.hdr-logo-name{font-size:14px;font-weight:700;letter-spacing:-.3px; display:none;}
+@media(min-width:600px){.hdr-logo-name{display:block;}}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.account-selector{background:var(--card); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:5px; font-family:var(--font); font-size:12px; font-weight:600;}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-sec);font-size:11px;padding:4px 9px;cursor:pointer;font-family:var(--font);transition:all .18s}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+/* ── DRAWDOWN METER ── */
+.dd-meter{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 18px;display:flex;align-items:center;gap:14px}
+.dd-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;font-weight:600;white-space:nowrap}
+.dd-bar-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.dd-bar{height:100%;border-radius:3px;background:var(--green);transition:width .5s ease,background .3s}
+.dd-bar.warn{background:var(--amber)}
+.dd-bar.danger{background:var(--red)}
+.dd-vals{font-family:var(--mono);font-size:11px;color:var(--text-sec);white-space:nowrap}
+.dd-vals .used{color:var(--text);font-weight:500}
+
+/* ── NAV TABS ── */
+.nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:11px 15px;font-size:13px;font-weight:500;color:var(--text-sec);cursor:pointer;border:none;background:none;font-family:var(--font);border-bottom:2px solid transparent;white-space:nowrap;transition:all .18s}
+.nav-tab.active{color:var(--amber);border-bottom-color:var(--amber)}
+.nav-tab:hover:not(.active){color:var(--text)}
+
+/* ── CONTENT ── */
+.app-content{flex:1;padding:18px;max-width:880px;margin:0 auto;width:100%}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── STAT CARDS & LAYOUTS (Kept from original) ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+@media(min-width:580px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px; position:relative;}
+.sl{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;font-weight:600}
+.sv{font-size:21px;font-weight:700;font-family:var(--mono);letter-spacing:-.5px}
+.sv.pos{color:var(--green)}
+.sv.neg{color:var(--red)}
+.sv.neu{color:var(--text)}
+.sv.amb{color:var(--amber)}
+.ss{font-size:11px;color:var(--text-sec);margin-top:3px}
+
+.sec-title{font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 10px}
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.split-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.split-title{font-size:11px;color:var(--text-sec);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.dir-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.dir-badge.long{background:rgba(0,200,150,.15);color:var(--green)}
+.dir-badge.short{background:rgba(255,77,106,.15);color:var(--red)}
+.split-val{font-size:19px;font-weight:700;font-family:var(--mono)}
+.split-sub{font-size:11px;color:var(--text-sec);margin-top:3px}
+.dash-actions{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+
+/* ── LOGGING ── */
+.log-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;max-width:540px}
+.log-h{font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px}
+.log-sub{font-size:12px;color:var(--text-sec);margin-bottom:20px}
+.toggle-group{display:flex;gap:7px;margin-bottom:4px}
+.tgl{flex:1;padding:10px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-sec);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s}
+.tgl.a-long{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.tgl.a-short{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.tgl.a-profit{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.tgl.a-loss{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+
+/* ── JOURNAL & CALENDAR ── */
+.jnl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.jnl-title{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.jnl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.jnl-scroll{overflow-x:auto}
+.jnl-table{width:100%;border-collapse:collapse;font-size:13px}
+.jnl-table th{text-align:left;padding:9px 12px;font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap}
+.jnl-table td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.jnl-table tr:hover td{background:var(--card-hover)}
+.pair-tag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-dim);padding:2px 7px;border-radius:4px;white-space:nowrap}
+.rr-v{font-family:var(--mono);font-weight:600}
+.rr-v.pos{color:var(--green)}
+.rr-v.neg{color:var(--red)}
+.money-v{font-family:var(--mono);font-weight:600}
+.money-v.pos{color:var(--green)}
+.money-v.neg{color:var(--red)}
+.reason-cell{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-sec);font-size:12px;cursor:pointer}
+.btn-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:3px 5px;border-radius:4px;}
+.btn-del:hover{color:var(--red);background:var(--red-dim)}
+.empty{text-align:center;padding:40px 20px;color:var(--text-sec)}
+
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav-btn{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500}
+.cal-month-lbl{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.cal-grid{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+.cal-hdr-cell{padding:9px 4px;text-align:center;font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{min-height:68px;padding:7px 5px 5px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cal-day{font-size:11px;font-weight:500;color:var(--text-sec);margin-bottom:3px}
+.cal-cell.today .cal-day{color:var(--amber);font-weight:700}
+.cal-dots{display:flex;flex-wrap:wrap;gap:2px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot.profit{background:var(--green)}
+.cal-dot.loss{background:var(--red)}
+.cal-pnl{font-size:9px;font-family:var(--mono);font-weight:600;margin-top:2px}
+
+/* ── MODALS & TOASTS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px;width:100%;max-width:400px;text-align:center}
+.modal h2{font-size:24px; letter-spacing:-.5px; margin-bottom:10px;}
+.modal p{color:var(--text-sec); font-size:13px; margin-bottom:20px;}
+.modal.success h2{color:var(--green)}
+.modal.fail h2{color:var(--red)}
+
+.toast{position:fixed;bottom:22px;right:22px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 15px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 8px 28px rgba(0,0,0,.5);transform:translateY(70px);opacity:0;transition:all .3s ease;max-width:270px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+
+/* ── FLEX CARD EXPORT STYLES (Hidden visually, rendered to canvas) ── */
+#flex-export-zone {
+  position: absolute;
+  top: -9999px; left: -9999px;
+  width: 600px;
+  background: #0B0E14;
+  color: #E8ECF4;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 40px;
+  border-radius: 20px;
+  border: 2px solid #28364A;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
+.flex-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #28364A; padding-bottom: 20px; margin-bottom: 20px;}
+.flex-logo { font-size: 24px; font-weight: 700; color: #F5A623; letter-spacing: -1px; }
+.flex-acc-name { font-family: 'JetBrains Mono'; font-size: 14px; color: #7D8A9C; }
+.flex-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;}
+.flex-stat-box { background: #141820; padding: 20px; border-radius: 12px; border: 1px solid #1E2838; }
+.flex-stat-lbl { font-size: 12px; color: #7D8A9C; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;}
+.flex-stat-val { font-size: 32px; font-weight: 700; font-family: 'JetBrains Mono'; }
+.flex-roast-box { background: linear-gradient(45deg, rgba(245,166,35,0.1), rgba(255,77,106,0.1)); padding: 25px; border-radius: 12px; border: 1px solid rgba(245,166,35,0.3); text-align: center; }
+.flex-roast-title { font-size: 14px; font-weight: 700; color: #F5A623; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;}
+.flex-roast-text { font-size: 16px; line-height: 1.5; color: #E8ECF4; font-style: italic;}
+.flex-footer { margin-top: 20px; text-align: center; font-size: 12px; color: #3D4E62; font-family: 'JetBrains Mono';}
+</style>
+</head>
+<body>
+
+<div id="auth-screen" class="screen active">
+  <div class="auth-logo">
+    <div class="logo-mark">EJ</div>
+    <div class="logo-name">EDGE JOURNAL</div>
+  </div>
+  <div class="auth-tagline">Your edge is your discipline. Track it.</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <div id="login-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="li-email" placeholder="trader@edge.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="li-pass" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="doLogin()">Sign In</button>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="su-email" placeholder="trader@edge.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="su-pass" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="doSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="onboarding-screen" class="screen">
+  <div class="auth-logo">
+    <div class="logo-mark">EJ</div>
+    <div class="logo-name">EDGE JOURNAL</div>
+  </div>
+  <div class="ob-card">
+    <div class="welcome-h">New Account Phase</div>
+    <div class="psych-quote">Configure your prop or personal account. Strict rules apply.</div>
+    
+    <div class="field">
+      <label>Account / Challenge Name</label>
+      <input type="text" id="ob-acc-name" placeholder="e.g. 50k Phase 1">
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Initial Balance ($)</label>
+        <input type="number" id="ob-acc-size" placeholder="100000" min="1">
+      </div>
+      <div class="field">
+        <label>Profit Target (%)</label>
+        <input type="number" id="ob-target" placeholder="8" min="1" step="0.1">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Max Drawdown (%)</label>
+        <input type="number" id="ob-max-dd" placeholder="10" min="1" step="0.1" oninput="updateRecRisk()">
+      </div>
+      <div class="field">
+        <label>Daily Drawdown (%)</label>
+        <input type="number" id="ob-daily-dd" placeholder="5" min="1" step="0.1">
+      </div>
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <label>Risk Per Trade (%)</label>
+      <span class="badge-click" id="rec-risk-badge" onclick="applyRecRisk()">Rec: --</span>
+      <input type="number" id="ob-risk" placeholder="Custom or Click Rec" min="0.1" step="0.1">
+    </div>
+
+    <button class="btn btn-primary" style="margin-top:15px" onclick="saveNewAccount()">Initialize Account</button>
+    <button class="btn btn-ghost" style="margin-top:10px; display:none;" id="btn-cancel-ob" onclick="showScreen('app-screen')">Cancel</button>
+  </div>
+</div>
+
+<div id="app-screen" class="screen">
+  <div class="app-header">
+    <div class="hdr-logo">
+      <div class="hdr-logo-mark">EJ</div>
+      <div class="hdr-logo-name">EDGE JOURNAL</div>
+    </div>
+    <div class="hdr-right">
+      <select class="account-selector" id="account-switcher" onchange="switchAccount()"></select>
+      <button class="btn-primary" style="padding:5px 10px; border-radius:5px; font-weight:700; border:none; cursor:pointer;" onclick="showScreen('onboarding-screen'); document.getElementById('btn-cancel-ob').style.display='block';">+ New</button>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="dd-meter">
+    <div class="dd-label">Max Drawdown</div>
+    <div class="dd-bar-wrap">
+      <div class="dd-bar" id="dd-bar-fill" style="width: 0%;"></div>
+    </div>
+    <div class="dd-vals">
+      <span class="used" id="dd-current">0.0%</span> / <span id="dd-max">10.0%</span>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('dash')">Dashboard</button>
+    <button class="nav-tab" onclick="switchTab('log')">Log Trade</button>
+    <button class="nav-tab" onclick="switchTab('journal')">Journal</button>
+    <button class="nav-tab" onclick="switchTab('calendar')">Calendar</button>
+  </div>
+
+  <div class="app-content">
+    
+    <div id="tab-dash" class="tab-panel active">
+      <div class="dash-actions">
+<button class="btn btn-primary btn-sm" onclick="generateMonthlyPerformance()">
+  Export Monthly Performance
+</button>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="sl">Current Balance</div>
+          <div class="sv neu" id="dash-bal">$0.00</div>
+          <div class="ss" id="dash-target">Target: $0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="sl">Net P&L</div>
+          <div class="sv neu" id="dash-pnl">$0.00</div>
+          <div class="ss" id="dash-rr">0.00 RR</div>
+        </div>
+        <div class="stat-card">
+          <div class="sl">Win Rate</div>
+          <div class="sv neu" id="dash-wr">0%</div>
+          <div class="ss" id="dash-total-trades">0 Trades</div>
+        </div>
+        <div class="stat-card">
+          <div class="sl">Risk Per Trade</div>
+          <div class="sv amb" id="dash-rpt">0.00%</div>
+          <div class="ss" id="dash-rpt-dollar">$0.00</div>
+        </div>
+      </div>
+
+      <div class="sec-title">Edge Analysis</div>
+      <div class="split-grid">
+        <div class="split-card">
+          <div class="split-title"><span class="dir-badge long">Long</span></div>
+          <div class="split-val" id="dash-long-pnl">$0.00</div>
+          <div class="split-sub" id="dash-long-rr">0.00 RR</div>
+        </div>
+        <div class="split-card">
+          <div class="split-title"><span class="dir-badge short">Short</span></div>
+          <div class="split-val" id="dash-short-pnl">$0.00</div>
+          <div class="split-sub" id="dash-short-rr">0.00 RR</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-log" class="tab-panel">
+      <div class="log-card">
+        <div class="log-h">Execute & Document</div>
+        <div class="log-sub">Trust your mechanics. Don't lie to the journal.</div>
+        
+        <div class="field">
+          <label>Pair / Ticker</label>
+          <select id="log-pair" onchange="toggleCustomPair()">
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="XAUUSD">XAUUSD</option>
+            <option value="NAS100">NAS100</option>
+            <option value="CUSTOM">Custom Pair...</option>
+          </select>
+        </div>
+        <div class="field" id="custom-pair-wrap" style="display:none">
+          <label>Custom Pair</label>
+          <input type="text" id="log-custom-pair" placeholder="e.g. SPX500" style="text-transform:uppercase">
+        </div>
+
+        <div class="field">
+          <label>Direction</label>
+          <div class="toggle-group">
+            <button class="tgl a-long" id="tgl-long" onclick="setDirection('Long')">Long</button>
+            <button class="tgl" id="tgl-short" onclick="setDirection('Short')">Short</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Outcome</label>
+          <div class="toggle-group">
+            <button class="tgl a-profit" id="tgl-profit" onclick="setOutcome('Profit')">Profit</button>
+            <button class="tgl" id="tgl-loss" onclick="setOutcome('Loss')">Loss (-1 RR)</button>
+          </div>
+        </div>
+
+        <div class="field" id="rr-wrap">
+          <label>Reward Captured (RR)</label>
+          <input type="number" id="log-rr" placeholder="e.g. 2.5" min="0.1" step="0.1">
+        </div>
+
+        <div class="field">
+          <label>Rationale (Order Block, FVG, Sweeps)</label>
+          <textarea id="log-reason" placeholder="What was the setup?"></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="submitTrade()">Log Trade</button>
+      </div>
+    </div>
+
+    <div id="tab-journal" class="tab-panel">
+      <div class="jnl-header">
+        <div class="jnl-title">Trade History</div>
+      </div>
+      <div class="jnl-wrap">
+        <div class="jnl-scroll">
+          <table class="jnl-table" id="journal-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Pair</th>
+                <th>Dir</th>
+                <th>Outcome</th>
+                <th>RR</th>
+                <th>P&L</th>
+                <th>Rationale</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="journal-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="journal-empty" class="empty" style="display:none">
+        <div class="empty-title">No trades logged in this phase.</div>
+      </div>
+    </div>
+
+    <div id="tab-calendar" class="tab-panel">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">Prev</button>
+        <div class="cal-month-lbl" id="cal-month-label">Month Year</div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">Next</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-hdr">
+          <div class="cal-hdr-cell">Sun</div><div class="cal-hdr-cell">Mon</div><div class="cal-hdr-cell">Tue</div>
+          <div class="cal-hdr-cell">Wed</div><div class="cal-hdr-cell">Thu</div><div class="cal-hdr-cell">Fri</div>
+          <div class="cal-hdr-cell">Sat</div>
+        </div>
+        <div class="cal-body" id="cal-body"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="status-modal">
+  <div class="modal" id="status-modal-content">
+    <h2 id="sm-title">STAGE PASSED</h2>
+    <p id="sm-desc">You hit the profit target. Discipline pays.</p>
+    <button class="btn btn-primary" onclick="document.getElementById('status-modal').classList.remove('open')">Acknowledge</button>
+  </div>
+</div>
+
+<div id="flex-export-zone">
+  <div class="flex-header">
+    <div class="flex-logo">EJ // EDGE JOURNAL</div>
+    <div class="flex-acc-name" id="flex-acc">ACCOUNT_NAME</div>
+  </div>
+  <div class="flex-stats">
+    <div class="flex-stat-box">
+      <div class="flex-stat-lbl">Net Return</div>
+      <div class="flex-stat-val" id="flex-pnl" style="color:#00C896">+$0.00</div>
+    </div>
+    <div class="flex-stat-box">
+      <div class="flex-stat-lbl">Win Rate</div>
+      <div class="flex-stat-val" id="flex-wr" style="color:#F5A623">0%</div>
+    </div>
+  </div>
+  <div class="flex-roast-box">
+    <div class="flex-roast-title" id="flex-roast-title">TRADER PROFILING</div>
+    <div class="flex-roast-text" id="flex-roast-text">Analyzing edge parameters...</div>
+  </div>
+  <div class="flex-footer">Verified via Edge Journal Engine • Offline Data Secure</div>
+</div>
+
+<div class="toast" id="toast">Message</div>
+
+<script type="module">
+  // 1. IMPORT FIREBASE V9 MODULES
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // REPLACE WITH YOUR ACTUAL FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyADGIhoPlrkI7x9_LtZJpWbOdM-Bvv--T4",
+    authDomain: "euphoriajournal.firebaseapp.com",
+    projectId: "euphoriajournal",
+    storageBucket: "euphoriajournal.firebasestorage.app",
+    messagingSenderId: "361171963946",
+    appId: "1:361171963946:web:bc56a25279255d1a3eb353"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ── GLOBAL STATE ── */
+  let activeUser = null;
+  let userData = { accounts: [] };
+  let activeAccIndex = 0;
+  
+  let currentDirection = 'Long';
+  let currentOutcome = 'Profit';
+  let currentDate = new Date();
+  
+  // Attach functions to window so HTML onclicks work
+  window.showScreen = (id) => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  };
+  
+  window.showToast = (msg, type = 'info') => {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.className = `toast show ${type}`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  };
+  
+  const formatMoney = (amt) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amt);
+
+  /* ── AUTHENTICATION ── */
+  window.switchAuthTab = (tab) => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+    event.target.classList.add('active');
+  };
+
+  window.doSignup = async () => {
+    const e = document.getElementById('su-email').value.trim();
+    const p = document.getElementById('su-pass').value;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, e, p);
+      await setDoc(doc(db, "users", cred.user.uid), { accounts: [] });
+      window.showToast("Account created!", "success");
+    } catch (err) { alert(err.message); }
+  };
+
+  window.doLogin = async () => {
+    const e = document.getElementById('li-email').value.trim();
+    const p = document.getElementById('li-pass').value;
+    try {
+      await signInWithEmailAndPassword(auth, e, p);
+    } catch (err) { alert(err.message); }
+  };
+
+  window.doLogout = () => signOut(auth);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      activeUser = user;
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        userData = snap.data();
+        if (!userData.accounts || userData.accounts.length === 0) {
+          window.showScreen('onboarding-screen');
+        } else {
+          populateAccountSwitcher();
+          window.showScreen('app-screen');
+          window.refreshAll();
+        }
+      }
+    } else {
+      activeUser = null;
+      window.showScreen('auth-screen');
+    }
+  });
+
+  async function syncToFirebase() {
+    if(activeUser) await setDoc(doc(db, "users", activeUser.uid), userData);
+  }
+
+  /* ── MULTI-ACCOUNT & ONBOARDING ── */
+  window.updateRecRisk = () => {
+    const dd = parseFloat(document.getElementById('ob-max-dd').value);
+    if(dd > 0) {
+      const rec = ((dd / 2) / 10).toFixed(2);
+      document.getElementById('rec-risk-badge').innerText = `Recommended risk  per trade: ${rec}%`;
+      document.getElementById('rec-risk-badge').dataset.val = rec;
+    }
+  };
+  
+  window.applyRecRisk = () => {
+    const val = document.getElementById('rec-risk-badge').dataset.val;
+    if(val) document.getElementById('ob-risk').value = val;
+  };
+
+  window.saveNewAccount = async () => {
+    const name = document.getElementById('ob-acc-name').value || `Account ${userData.accounts.length + 1}`;
+    const bal = parseFloat(document.getElementById('ob-acc-size').value);
+    const tar = parseFloat(document.getElementById('ob-target').value);
+    const max = parseFloat(document.getElementById('ob-max-dd').value);
+    const day = parseFloat(document.getElementById('ob-daily-dd').value);
+    const risk = parseFloat(document.getElementById('ob-risk').value);
+
+    if(!bal || !max || !risk) return window.showToast("Fill required fields", "error");
+
+    const newAcc = {
+      id: Date.now().toString(),
+      name, initialBalance: bal, targetPct: tar, maxDDPct: max, dailyDDPct: day, riskPct: risk,
+      status: 'Active', trades: []
+    };
+
+    userData.accounts.push(newAcc);
+    activeAccIndex = userData.accounts.length - 1;
+    await syncToFirebase();
+    
+    populateAccountSwitcher();
+    window.showScreen('app-screen');
+    window.refreshAll();
+    window.showToast("Account Initialized", "success");
+    
+    // Clear form
+    document.querySelectorAll('#onboarding-screen input').forEach(i => i.value = '');
+    document.getElementById('rec-risk-badge').innerText = 'Rec: --';
+  };
+
+  function populateAccountSwitcher() {
+    const sel = document.getElementById('account-switcher');
+    sel.innerHTML = '';
+    userData.accounts.forEach((acc, i) => {
+      let opt = document.createElement('option');
+      opt.value = i;
+      opt.innerText = `${acc.name} (${acc.status})`;
+      if(i === activeAccIndex) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  window.switchAccount = () => {
+    activeAccIndex = parseInt(document.getElementById('account-switcher').value);
+    window.refreshAll();
+  };
+
+  function getActiveAcc() { return userData.accounts[activeAccIndex]; }
+
+  /* ── APP CORE LOGIC ── */
+  window.switchTab = (tab) => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    if(tab === 'calendar') window.renderCalendar();
+  };
+
+  window.refreshAll = () => {
+    renderDashboard();
+    renderJournal();
+    if(document.getElementById('tab-calendar').classList.contains('active')) window.renderCalendar();
+  };
+
+  /* ── TRADING LOGIC ── */
+  window.toggleCustomPair = () => {
+    const val = document.getElementById('log-pair').value;
+    document.getElementById('custom-pair-wrap').style.display = val === 'CUSTOM' ? 'block' : 'none';
+  };
+  window.setDirection = (dir) => {
+    currentDirection = dir;
+    document.getElementById('tgl-long').className = `tgl ${dir==='Long'?'a-long':''}`;
+    document.getElementById('tgl-short').className = `tgl ${dir==='Short'?'a-short':''}`;
+  };
+  window.setOutcome = (out) => {
+    currentOutcome = out;
+    document.getElementById('tgl-profit').className = `tgl ${out==='Profit'?'a-profit':''}`;
+    document.getElementById('tgl-loss').className = `tgl ${out==='Loss'?'a-loss':''}`;
+    document.getElementById('rr-wrap').style.display = out === 'Loss' ? 'none' : 'block';
+  };
+
+  window.submitTrade = async () => {
+    const acc = getActiveAcc();
+    if(acc.status !== 'Active') return window.showToast(`Account is ${acc.status}. Cannot log.`, "error");
+
+    let pair = document.getElementById('log-pair').value;
+    if(pair === 'CUSTOM') pair = document.getElementById('log-custom-pair').value.toUpperCase();
+    if(!pair) return window.showToast("Enter a pair.", "error");
+
+    let rr = -1;
+    if (currentOutcome === 'Profit') {
+      rr = parseFloat(document.getElementById('log-rr').value);
+      if (!rr || rr <= 0) return window.showToast("Enter a valid RR.", "error");
+    }
+
+    const reason = document.getElementById('log-reason').value.trim();
+    
+    // Calculate PNL based on current balance
+    const totalPnl = acc.trades.reduce((sum, t) => sum + t.pnl, 0);
+    const currentAccSize = acc.initialBalance + totalPnl;
+    const dollarRisk = (acc.riskPct / 100) * currentAccSize;
+    const pnl = rr * dollarRisk;
+
+    acc.trades.push({
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      pair, direction: currentDirection, outcome: currentOutcome, rr, pnl, reason
+    });
+
+    checkAccountStatus(acc);
+    await syncToFirebase();
+    
+    document.getElementById('log-rr').value = '';
+    document.getElementById('log-reason').value = '';
+    window.showToast("Trade Logged!", "success");
+    window.refreshAll();
+    window.switchTab('dash');
+  };
+
+  function checkAccountStatus(acc) {
+    let peak = acc.initialBalance;
+    let current = acc.initialBalance;
+    let maxDDObserved = 0;
+
+    for (let t of acc.trades) {
+      current += t.pnl;
+      if (current > peak) peak = current;
+      let ddPct = ((peak - current) / peak) * 100;
+      if (ddPct > maxDDObserved) maxDDObserved = ddPct;
+    }
+
+    const profitPct = ((current - acc.initialBalance) / acc.initialBalance) * 100;
+    const m = document.getElementById('status-modal');
+    const mCon = document.getElementById('status-modal-content');
+
+    if (maxDDObserved >= acc.maxDDPct) {
+      acc.status = 'Failed (Max DD)';
+      mCon.className = 'modal fail';
+      document.getElementById('sm-title').innerText = "CHALLENGE FAILED";
+      document.getElementById('sm-desc').innerText = `Max Drawdown breached (${maxDDObserved.toFixed(2)}%).`;
+      m.classList.add('open');
+      populateAccountSwitcher();
+    } else if (acc.targetPct > 0 && profitPct >= acc.targetPct) {
+      acc.status = 'Passed';
+      mCon.className = 'modal success';
+      document.getElementById('sm-title').innerText = "STAGE PASSED";
+      document.getElementById('sm-desc').innerText = `Target hit. Discipline pays off.`;
+      m.classList.add('open');
+      populateAccountSwitcher();
+    }
+  }
+
+  window.deleteTrade = async (id) => {
+    if(!confirm("Delete this trade?")) return;
+    const acc = getActiveAcc();
+    acc.trades = acc.trades.filter(t => t.id !== id);
+    if(acc.status !== 'Active') acc.status = 'Active'; // Reset if deleted a blowing trade
+    await syncToFirebase();
+    window.refreshAll();
+  };
+
+  /* ── RENDERING ── */
+  function renderDashboard() {
+    const acc = getActiveAcc();
+    if(!acc) return;
+    
+    const trades = acc.trades;
+    const totalPnl = trades.reduce((s, t) => s + t.pnl, 0);
+    const totalRR = trades.reduce((s, t) => s + t.rr, 0);
+    const wins = trades.filter(t => t.outcome === 'Profit').length;
+    const winRate = trades.length ? ((wins / trades.length) * 100).toFixed(1) : 0;
+    const currentBal = acc.initialBalance + totalPnl;
+    const targetDoll = acc.initialBalance * (1 + (acc.targetPct/100));
+
+    // Splits
+    const longs = trades.filter(t => t.direction === 'Long');
+    const shorts = trades.filter(t => t.direction === 'Short');
+    
+    document.getElementById('dash-bal').innerText = formatMoney(currentBal);
+    document.getElementById('dash-bal').className = `sv ${totalPnl >= 0 ? 'pos' : 'neg'}`;
+    document.getElementById('dash-target').innerText = acc.targetPct > 0 ? `Target: ${formatMoney(targetDoll)}` : 'No target set';
+    
+    document.getElementById('dash-pnl').innerText = formatMoney(totalPnl);
+    document.getElementById('dash-pnl').className = `sv ${totalPnl >= 0 ? 'pos' : 'neg'}`;
+    document.getElementById('dash-rr').innerText = totalRR > 0 ? `+${totalRR.toFixed(2)}R` : `${totalRR.toFixed(2)}R`;
+    
+    document.getElementById('dash-wr').innerText = `${winRate}%`;
+    document.getElementById('dash-total-trades').innerText = `${trades.length} Trades`;
+    
+    document.getElementById('dash-rpt').innerText = `${acc.riskPct}%`;
+    document.getElementById('dash-rpt-dollar').innerText = formatMoney((acc.riskPct/100)*currentBal);
+
+    // Drawdown bar calculation
+    let peak = acc.initialBalance, current = acc.initialBalance, maxDD = 0;
+    trades.forEach(t => {
+      current += t.pnl;
+      if(current > peak) peak = current;
+      let d = ((peak - current)/peak)*100;
+      if(d > maxDD) maxDD = d;
+    });
+    const pctUsed = (maxDD / acc.maxDDPct) * 100;
+    const bar = document.getElementById('dd-bar-fill');
+    bar.style.width = `${Math.min(pctUsed, 100)}%`;
+    bar.className = pctUsed > 80 ? 'dd-bar danger' : (pctUsed > 50 ? 'dd-bar warn' : 'dd-bar');
+    document.getElementById('dd-current').innerText = `${maxDD.toFixed(1)}%`;
+    document.getElementById('dd-max').innerText = `${acc.maxDDPct}%`;
+
+    // Splits render
+    document.getElementById('dash-long-pnl').innerText = formatMoney(longs.reduce((s,t)=>s+t.pnl,0));
+    document.getElementById('dash-long-rr').innerText = `${longs.reduce((s,t)=>s+t.rr,0).toFixed(2)} RR`;
+    document.getElementById('dash-short-pnl').innerText = formatMoney(shorts.reduce((s,t)=>s+t.pnl,0));
+    document.getElementById('dash-short-rr').innerText = `${shorts.reduce((s,t)=>s+t.rr,0).toFixed(2)} RR`;
+  }
+
+  function renderJournal() {
+    const acc = getActiveAcc();
+    const tbody = document.getElementById('journal-body');
+    const empty = document.getElementById('journal-empty');
+    tbody.innerHTML = '';
+    
+    if(!acc || acc.trades.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    
+    [...acc.trades].reverse().forEach(t => {
+      const d = new Date(t.date).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+      const rrClass = t.rr >= 0 ? 'pos' : 'neg';
+      tbody.innerHTML += `
+        <tr>
+          <td style="color:var(--text-dim);font-size:11px">${d}</td>
+          <td><span class="pair-tag">${t.pair}</span></td>
+          <td><span class="dir-badge ${t.direction.toLowerCase()}">${t.direction}</span></td>
+          <td style="font-weight:600;color:var(--${t.outcome==='Profit'?'green':'red'})">${t.outcome}</td>
+          <td class="rr-v ${rrClass}">${t.rr > 0 ? '+'+t.rr : t.rr}R</td>
+          <td class="money-v ${rrClass}">${formatMoney(t.pnl)}</td>
+          <td class="reason-cell" title="${t.reason}">${t.reason || '-'}</td>
+          <td><button class="btn-del" onclick="deleteTrade('${t.id}')">✕</button></td>
+        </tr>
+      `;
+    });
+  }
+
+  window.changeMonth = (dir) => { currentDate.setMonth(currentDate.getMonth() + dir); window.renderCalendar(); };
+
+  window.renderCalendar = () => {
+    const acc = getActiveAcc();
+    if(!acc) return;
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    document.getElementById('cal-month-label').innerText = new Date(year, month).toLocaleDateString(undefined, {month:'long', year:'numeric'});
+    
+    const body = document.getElementById('cal-body');
+    body.innerHTML = '';
+    
+    const tradesByDate = {};
+    acc.trades.forEach(t => {
+      const d = new Date(t.date);
+      if(d.getFullYear() === year && d.getMonth() === month) {
+        if(!tradesByDate[d.getDate()]) tradesByDate[d.getDate()] = [];
+        tradesByDate[d.getDate()].push(t);
+      }
+    });
+
+    let dayCount = 1;
+    const today = new Date();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < 42; i++) {
+      const cell = document.createElement('div');
+      if (i >= firstDay && dayCount <= daysInMonth) {
+        cell.className = 'cal-cell';
+        if(year===today.getFullYear() && month===today.getMonth() && dayCount===today.getDate()) cell.classList.add('today');
+        
+        let html = `<div class="cal-day">${dayCount}</div><div class="cal-dots">`;
+        const dayTrades = tradesByDate[dayCount] || [];
+        let dayPnl = 0;
+        dayTrades.forEach(tr => {
+          html += `<div class="cal-dot ${tr.outcome==='Profit'?'profit':'loss'}"></div>`;
+          dayPnl += tr.pnl;
+        });
+        html += `</div>`;
+        if(dayTrades.length > 0) html += `<div class="cal-pnl ${dayPnl>=0?'pos':'neg'}">${dayPnl>=0?'+':''}${formatMoney(dayPnl)}</div>`;
+        cell.innerHTML = html;
+        dayCount++;
+      } else {
+        cell.className = 'cal-cell other';
+      }
+      body.appendChild(cell);
+    }
+  };
+
+  /* ── FLEX CARD EXPORT LOGIC ── */
+      window.generateMonthlyPerformance = () => {
+    const acc = getActiveAcc();
+    if (!acc || acc.trades.length === 0) return window.showToast("No trades to export.", "error");
+
+    // 1. Filter trades for the current month
+    const now = new Date();
+    const monthlyTrades = acc.trades.filter(t => {
+      const tDate = new Date(t.date);
+      return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
+    });
+
+    if (monthlyTrades.length === 0) return window.showToast("No trades recorded this month.", "error");
+
+    // 2. Calculate monthly stats
+    const totalPnl = monthlyTrades.reduce((s, t) => s + t.pnl, 0);
+    const wins = monthlyTrades.filter(t => t.outcome === 'Profit').length;
+    const wr = ((wins / monthlyTrades.length) * 100).toFixed(1);
+    
+    // 3. Update Flex DOM
+    const monthName = now.toLocaleString('default', { month: 'long' });
+    document.getElementById('flex-acc').innerText = `${acc.name.toUpperCase()} // ${monthName.toUpperCase()}`;
+    
+    const pnlEl = document.getElementById('flex-pnl');
+    pnlEl.innerText = (totalPnl >= 0 ? '+' : '') + formatMoney(totalPnl);
+    pnlEl.style.color = totalPnl >= 0 ? '#00C896' : '#FF4D6A';
+    document.getElementById('flex-wr').innerText = `${wr}%`;
+
+    // 4. Roast logic based on monthly data
+    const longPnl = monthlyTrades.filter(t => t.direction === 'Long').reduce((s, t) => s + t.pnl, 0);
+    const shortPnl = monthlyTrades.filter(t => t.direction === 'Short').reduce((s, t) => s + t.pnl, 0);
+    
+    const rTitle = document.getElementById('flex-roast-title');
+    const rText = document.getElementById('flex-roast-text');
+    
+    if (totalPnl <= 0) {
+      rTitle.innerText = "LIQUIDITY PROVIDER";
+      rText.innerText = '"You donated to the market this month. Stop tilting, check your order blocks, and protect the capital."';
+    } else if (longPnl >= shortPnl) {
+      rTitle.innerText = "LONG TRADER";
+      rText.innerText = '"You’re riding the wave up to the stars this month. Keep sweeping that liquidity."';
+    } else {
+      rTitle.innerText = "SHORT TRADER";
+      rText.innerText = '"You’re a meteorite enjoying the crash down. Maximum effort, zero gravity."';
+    }
+
+    // 5. Download
+    window.showToast("Generating Monthly Flex...", "info");
+    const targetNode = document.getElementById('flex-export-zone');
+    
+    html2canvas(targetNode, {
+      backgroundColor: null, scale: 2,
+      onclone: (doc) => {
+        doc.getElementById('flex-export-zone').style.position = 'relative';
+        doc.getElementById('flex-export-zone').style.top = '0';
+        doc.getElementById('flex-export-zone').style.left = '0';
+      }
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `EdgeJournal_Monthly_${monthName}_${acc.name}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      window.showToast("Monthly performance downloaded!", "success");
+    });
+  };
+</script>
+</body>
+</html>
