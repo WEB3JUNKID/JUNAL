@@ -1,13 +1,9 @@
-
-const CACHE_NAME = 'liquidity-log-v1';
+const CACHE_NAME = 'liquidity-log-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-    './icon.png',
-  // You can add your icon filenames here once created:
-  // './icon-192.png',
-  // './icon-512.png'
+  './icon.png',
 ];
 
 // Install Event: Cache our core files
@@ -32,6 +28,14 @@ self.addEventListener('activate', (event) => {
         })
       );
     })
+  );
+});
+
+// Fetch Event: Network-first, fall back to cache if offline
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .catch(() => caches.match(event.request))
   );
 });
 
