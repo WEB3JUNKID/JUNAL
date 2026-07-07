@@ -81,13 +81,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .btn-logout:hover{border-color:var(--red);color:var(--red)}
 
 /* ── DRAWDOWN METER ── */
-.dd-meter{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 18px;display:flex;align-items:center;gap:14px}
-.dd-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;font-weight:600;white-space:nowrap}
-.dd-bar-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.dd-meter{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 18px;display:flex;flex-direction:column;gap:5px}
+.dd-row{display:flex;align-items:center;gap:10px}
+.dd-label{font-size:9px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;font-weight:600;white-space:nowrap;width:42px}
+.dd-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:3px;overflow:hidden}
 .dd-bar{height:100%;border-radius:3px;background:var(--green);transition:width .5s ease,background .3s}
 .dd-bar.warn{background:var(--amber)}
 .dd-bar.danger{background:var(--red)}
-.dd-vals{font-family:var(--mono);font-size:11px;color:var(--text-sec);white-space:nowrap}
+.dd-vals{font-family:var(--mono);font-size:10px;color:var(--text-sec);white-space:nowrap;min-width:58px;text-align:right}
 .dd-vals .used{color:var(--text);font-weight:500}
 
 /* ── NAV TABS ── */
@@ -309,12 +310,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 
   <div class="dd-meter">
-    <div class="dd-label">Max Drawdown</div>
-    <div class="dd-bar-wrap">
-      <div class="dd-bar" id="dd-bar-fill" style="width: 0%;"></div>
+    <div class="dd-row">
+      <div class="dd-label">Max DD</div>
+      <div class="dd-bar-wrap">
+        <div class="dd-bar" id="dd-bar-fill" style="width: 0%;"></div>
+      </div>
+      <div class="dd-vals">
+        <span class="used" id="dd-current">0.0%</span> / <span id="dd-max">20%</span>
+      </div>
     </div>
-    <div class="dd-vals">
-      <span class="used" id="dd-current">0.0%</span> / <span id="dd-max">10.0%</span>
+    <div class="dd-row">
+      <div class="dd-label">Daily DD</div>
+      <div class="dd-bar-wrap">
+        <div class="dd-bar" id="ddd-bar-fill" style="width: 0%;"></div>
+      </div>
+      <div class="dd-vals">
+        <span class="used" id="ddd-current">0.0%</span> / <span id="ddd-max">5%</span>
+      </div>
     </div>
   </div>
 
@@ -736,26 +748,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   };
 
   function checkAccountStatus(acc) {
-    let peak = acc.initialBalance;
-    let current = acc.initialBalance;
-    let maxDDObserved = 0;
+    // Static Max DD: floor is locked to initialBalance, profits reduce exposure
+    const totalPnl = acc.trades.reduce((s, t) => s + t.pnl, 0);
+    const currentBal = acc.initialBalance + totalPnl;
+    const staticDD = ((acc.initialBalance - currentBal) / acc.initialBalance) * 100;
 
-    for (let t of acc.trades) {
-      current += t.pnl;
-      if (current > peak) peak = current;
-      let ddPct = ((peak - current) / peak) * 100;
-      if (ddPct > maxDDObserved) maxDDObserved = ddPct;
-    }
+    // Daily DD: today's losses vs current balance
+    const todayStr = new Date().toDateString();
+    const todayTrades = acc.trades.filter(t => new Date(t.date).toDateString() === todayStr);
+    const todayPnl = todayTrades.reduce((s, t) => s + t.pnl, 0);
+    const dailyDDUsed = todayPnl < 0 ? (Math.abs(todayPnl) / currentBal) * 100 : 0;
 
-    const profitPct = ((current - acc.initialBalance) / acc.initialBalance) * 100;
+    const profitPct = ((currentBal - acc.initialBalance) / acc.initialBalance) * 100;
     const m = document.getElementById('status-modal');
     const mCon = document.getElementById('status-modal-content');
 
-    if (maxDDObserved >= acc.maxDDPct) {
+    if (staticDD >= acc.maxDDPct) {
       acc.status = 'Failed (Max DD)';
       mCon.className = 'modal fail';
-      document.getElementById('sm-title').innerText = "CHALLENGE FAILED";
-      document.getElementById('sm-desc').innerText = `Max Drawdown breached (${maxDDObserved.toFixed(2)}%).`;
+      document.getElementById('sm-title').innerText = "ACCOUNT BLOWN";
+      document.getElementById('sm-desc').innerText = `Static max drawdown breached at ${staticDD.toFixed(2)}%. Balance fell below the floor.`;
+      m.classList.add('open');
+      populateAccountSwitcher();
+    } else if (acc.dailyDDPct > 0 && dailyDDUsed >= acc.dailyDDPct) {
+      acc.status = 'Failed (Daily DD)';
+      mCon.className = 'modal fail';
+      document.getElementById('sm-title').innerText = "DAILY LIMIT HIT";
+      document.getElementById('sm-desc').innerText = `Daily drawdown of ${acc.dailyDDPct}% breached today (${dailyDDUsed.toFixed(2)}% lost). Account locked.`;
       m.classList.add('open');
       populateAccountSwitcher();
     } else if (acc.targetPct > 0 && profitPct >= acc.targetPct) {
@@ -808,20 +827,27 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     document.getElementById('dash-rpt').innerText = `${acc.riskPct}%`;
     document.getElementById('dash-rpt-dollar').innerText = formatMoney((acc.riskPct/100)*currentBal);
 
-    // Drawdown bar calculation
-    let peak = acc.initialBalance, current = acc.initialBalance, maxDD = 0;
-    trades.forEach(t => {
-      current += t.pnl;
-      if(current > peak) peak = current;
-      let d = ((peak - current)/peak)*100;
-      if(d > maxDD) maxDD = d;
-    });
-    const pctUsed = (maxDD / acc.maxDDPct) * 100;
+    // Static Max DD: measured from initialBalance, profits reduce it
+    const staticDD = Math.max(0, ((acc.initialBalance - currentBal) / acc.initialBalance) * 100);
+    const maxPctUsed = (staticDD / acc.maxDDPct) * 100;
     const bar = document.getElementById('dd-bar-fill');
-    bar.style.width = `${Math.min(pctUsed, 100)}%`;
-    bar.className = pctUsed > 80 ? 'dd-bar danger' : (pctUsed > 50 ? 'dd-bar warn' : 'dd-bar');
-    document.getElementById('dd-current').innerText = `${maxDD.toFixed(1)}%`;
+    bar.style.width = `${Math.min(maxPctUsed, 100)}%`;
+    bar.className = maxPctUsed > 80 ? 'dd-bar danger' : (maxPctUsed > 50 ? 'dd-bar warn' : 'dd-bar');
+    document.getElementById('dd-current').innerText = `${staticDD.toFixed(1)}%`;
     document.getElementById('dd-max').innerText = `${acc.maxDDPct}%`;
+
+    // Daily DD: today's loss as % of current balance
+    const todayStr = new Date().toDateString();
+    const todayTrades = trades.filter(t => new Date(t.date).toDateString() === todayStr);
+    const todayPnl = todayTrades.reduce((s, t) => s + t.pnl, 0);
+    const dailyDDUsed = todayPnl < 0 ? (Math.abs(todayPnl) / currentBal) * 100 : 0;
+    const dailyLimit = acc.dailyDDPct || 5;
+    const dailyPctUsed = (dailyDDUsed / dailyLimit) * 100;
+    const dBar = document.getElementById('ddd-bar-fill');
+    dBar.style.width = `${Math.min(dailyPctUsed, 100)}%`;
+    dBar.className = dailyPctUsed > 80 ? 'dd-bar danger' : (dailyPctUsed > 50 ? 'dd-bar warn' : 'dd-bar');
+    document.getElementById('ddd-current').innerText = `${dailyDDUsed.toFixed(1)}%`;
+    document.getElementById('ddd-max').innerText = `${dailyLimit}%`;
 
     // Splits render
     document.getElementById('dash-long-pnl').innerText = formatMoney(longs.reduce((s,t)=>s+t.pnl,0));
