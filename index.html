@@ -1043,7 +1043,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
     try {
       // Step A: Fetch provisioned MetaApi accounts directly from MetaApi Cloud
-      const accsRes = await fetch("https://mt-provisioning-api-v1.agium-cl.mql5.net/users/current/accounts", {
+      const accsRes = await fetch("https://corsproxy.io/?" + encodeURIComponent("https://mt-provisioning-api-v1.agium-cl.mql5.net/users/current/accounts"), {
         method: "GET",
         headers: {
           "auth-token": activeToken,
@@ -1071,7 +1071,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       const dealsUrl = `https://mt-client-api-v1.${region}.agium-cl.mql5.net/users/current/accounts/${metaAcc.id}/historical-trades/deals?startTime=2020-01-01T00:00:00.000Z`;
 
       // Step B: Fetch trade deals directly from region client node
-      const historyRes = await fetch(dealsUrl, {
+      const historyRes = await fetch("https://corsproxy.io/?" + encodeURIComponent(dealsUrl) {
         method: "GET",
         headers: {
           "auth-token": activeToken,
