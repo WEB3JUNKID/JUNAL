@@ -1020,9 +1020,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
     try {
       // Step 1: Get provisioned accounts
-      const accsRes = await fetch("https://metaapi-api.agium.biz/provisioning/v1/user/accounts", {
-        headers: { "auth-token": META_API_TOKEN }
-      });
+      const res = await fetch(`/api/metaapi?endpoint=/user/accounts&token=${encodeURIComponent(META_API_TOKEN)}`);
+      
       
       if (!accsRes.ok) throw new Error("MetaApi Authentication Failed");
       const metaAccounts = await accsRes.json();
