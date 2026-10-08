@@ -1019,9 +1019,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     window.showToast("Connecting to MetaApi Cloud...", "info");
 
     try {
-      // Step 1: Get provisioned accounts
-      const res = await fetch(`/api/metaapi?endpoint=/user/accounts&token=${encodeURIComponent(META_API_TOKEN)}`);
-      
+      // Step 1: Get provisioned accounts via Proxy
+      const accsRes = await fetch(`/api/metaapi?endpoint=${encodeURIComponent("/user/accounts")}&token=${encodeURIComponent(META_API_TOKEN)}`);
       
       if (!accsRes.ok) throw new Error("MetaApi Authentication Failed");
       const metaAccounts = await accsRes.json();
@@ -1031,13 +1030,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       }
 
       // Match account by MT5 Login ID or fall back to first MetaApi account
-      let metaAcc = metaAccounts.find(a => acc.mt5 && acc.mt5.login && a.login === acc.mt5.login);
+      let metaAcc = metaAccounts.find(a => acc.mt5 && acc.mt5.login && String(a.login) === String(acc.mt5.login));
       if (!metaAcc) metaAcc = metaAccounts[0];
 
-      // Step 2: Fetch trade deals / history
-      const historyRes = await fetch(`https://metaapi-api.agium.biz/provisioning/v1/user/accounts/${metaAcc.id}/historical-trades/deals?startTime=2020-01-01T00:00:00.000Z`, {
-        headers: { "auth-token": META_API_TOKEN }
-      });
+      // Step 2: Fetch trade deals / history via Proxy
+      const historyEndpoint = `/user/accounts/${metaAcc.id}/historical-trades/deals?startTime=2020-01-01T00:00:00.000Z`;
+      const historyRes = await fetch(`/api/metaapi?endpoint=${encodeURIComponent(historyEndpoint)}&token=${encodeURIComponent(META_API_TOKEN)}`);
 
       if (!historyRes.ok) throw new Error("Failed to pull MetaApi trade deals");
       const data = await historyRes.json();
@@ -1055,37 +1053,34 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
             const riskAmt = (acc.balance * (acc.riskPercent || 1)) / 100;
             const rr = isWin ? parseFloat((pnl / (riskAmt || 1)).toFixed(2)) : -1;
 
+            // Push imported trade into account
             acc.trades.push({
               id: `meta_${deal.id}`,
-              date: deal.time || new Date().toISOString(),
-              pair: (deal.symbol || 'UNKNOWN').replace('/', '').toUpperCase(),
-              direction: deal.type === 'DEAL_TYPE_BUY' ? 'Long' : 'Short',
-              outcome: isWin ? 'Profit' : 'Loss',
+              pair: deal.symbol,
+              type: deal.type === 'DEAL_TYPE_BUY' ? 'BUY' : 'SELL',
+              pnl: pnl,
               rr: rr,
-              pnl: parseFloat(pnl.toFixed(2)),
-              reason: 'Auto-Synced via MetaApi Engine'
+              date: deal.time ? new Date(deal.time).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              source: 'MetaApi'
             });
-            acc.balance = parseFloat((acc.balance + pnl).toFixed(2));
             importedCount++;
-          }
-        }
-      });
+          } // <--- Closes if (!exists)
+        } // <--- Closes if (deal.entryType...)
+      }); // <--- Closes deals.forEach()
 
       if (importedCount > 0) {
-        await saveUserData();
-        updateDashboard();
-        renderJournal();
-        renderCalendar();
-        window.showToast(`Synced ${importedCount} new MT5 trades!`, "success");
+        if (typeof window.saveUserData === 'function') window.saveUserData();
+        if (typeof window.renderAll === 'function') window.renderAll();
+        window.showToast(`Synced ${importedCount} new trades!`, "success");
       } else {
-        window.showToast("All trades up to date.", "info");
+        window.showToast("No new trades to sync", "info");
       }
 
-    } catch (err) {
-      console.error(err);
-      window.showToast(err.message || "MetaApi Sync Failed", "error");
-    }
-  };
+    } catch (err) { // <--- Catch block for try
+      console.error("MetaApi Sync Error:", err);
+      window.showToast(err.message || "Sync failed", "error");
+    } // <--- Closes catch
+}; // <--- ASYNC FUNCTION ENDS HERE
 
   /* ── PERFORMANCE CARD EXPORT (html2canvas) ── */
   window.generateMonthlyPerformance = async () => {
