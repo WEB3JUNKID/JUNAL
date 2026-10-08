@@ -1012,75 +1012,129 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   }
 
   /* ── META API SYNC ENGINE ── */
-  window.syncMetaApiTrades = async () => {
-    const acc = userData.accounts[activeAccIndex];
-    if (!acc) return window.showToast("No active account", "error");
+  <!-- Replace your entire MetaApi <script> section in index.html with this complete block -->
+<script>
+  // 1. MetaApi Token Configuration & LocalStorage Persistence
+  const DEFAULT_META_API_TOKEN = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2YTQ4ZTE5YzlhNmE5NzdjMzY5NGVlYTlhYTg5YTFlMCIsImFjY2Vzc1J1bGVzIjpbeyJpZCI6InRyYWRpbmctYWNjb3VudC1tYW5hZ2VtZW50LWFwaSIsIm1ldGhvZHMiOlsidHJhZGluZy1hY2NvdW50LW1hbmFnZW1lbnQtYXBpOnJlc3Q6cHVibGljOio6KiJdLCJyb2xlcyI6WyJyZWFkZXIiLCJ3cml0ZXIiXSwicmVzb3VyY2VzIjpbIio6JFVTRVJfSUQkOioiXX0seyJpZCI6Im1ldGFhcGktcmVzdC1hcGkiLCJtZXRob2RzIjpbIm1ldGFhcGktYXBpOnJlc3Q6cHVibGljOio6KiJdLCJyb2xlcyI6WyJyZWFkZXIiLCJ3cml0ZXIiXSwicmVzb3VyY2VzIjpbIio6JFVTRVJfSUQkOioiXX0seyJpZCI6Im1ldGFhcGktcnBjLWFwaSIsIm1ldGhvZHMiOlsibWV0YWFwaS1hcGk6d3M6cHVibGljOio6KiJdLCJyb2xlcyI6WyJyZWFkZXIiLCJ3cml0ZXIiXSwicmVzb3VyY2VzIjpbIio6JFVTRVJfSUQkOioiXX0seyJpZCI6Im1ldGFhcGktcmVhbC10aW1lLXN0cmVhbWluZy1hcGkiLCJtZXRob2RzIjpbIm1ldGFhcGktYXBpOndzOnB1YmxpYzoqOioiXSwicm9sZXMiOlsicmVhZGVyIiwid3JpdGVyIl0sInJlc291cmNlcyI6WyIqOiRVU0VSX0lEJDoqIl19LHsiaWQiOiJtZXRhc3RhdHMtYXBpIiwibWV0aG9kcyI6WyJtZXRhc3RhdHMtYXBpOnJlc3Q6cHVibGljOio6KiJdLCJyb2xlcyI6WyJyZWFkZXIiLCJ3cml0ZXIiXSwicmVzb3VyY2VzIjpbIio6JFVTRVJfSUQkOioiXX0seyJpZCI6InJpc2stbWFuYWdlbWVudC1hcGkiLCJtZXRob2RzIjpbInJpc2stbWFuYWdlbWVudC1hcGk6cmVzdDpwdWJsaWM6KjoqIl0sInJvbGVzIjpbInJlYWRlciIsIndyaXRlciJdLCJyZXNvdXJjZXMiOlsiKjokVVNFUl9JRCQ6KiJdfSx7ImlkIjoibXQtbWFuYWdlci1hcGkiLCJtZXRob2RzIjpbIm10LW1hbmFnZXItYXBpOnJlc3Q6ZGVhbGluZzoqOioiLCJtdC1tYW5hZ2VtZW50LWFwaTpyZXN0OnB1YmxpYzoqOioiXSwicm9sZXMiOlsicmVhZGVyIiwid3JpdGVyIl0sInJlc291cmNlcyI6WyIqOiRVU0VSX0lEJDoqIl19LHsiaWQiOiJiaWxsaW5nLWFwaSIsIm1ldGhvZHMiOlsiYmlsbGluZy1hcGk6cmVzdDpwdWJsaWM6KjoqIl0sInJvbGVzIjpbInJlYWRlciJdLCJyZXNvdXJjZXMiOlsiKjokVVNFUl9JRCQ6KiJdfV0sImlnbm9yZVJhdGVMaW1pdHMiOmZhbHNlLCJ0b2tlbklkIjoiMjAyMTAyMTMiLCJpbXBlcnNvbGF0ZWQiOmZhbHNlLCJyZWFsVXNlcklkIjoiNmE0OGUxOWM5YTZhOTc3YzM2OTRlZWE5YWE4OWExZTAiLCJpYXQiOjE3OTE0NjYzNTgsImV4cCI6MTc5OTI0MjM1OH0.TphxUNv29pWbd7jUiCDV8e28ZaeWc5Kb3m9cz4nm6CQ5epmz7dYg-GuV9ryJoAKQqPUoLbPCbcuasDxHoRxV0ItOMT9bSOLRXolJIpsGxj9XIZU4uFEUhbMylxqxjKuIJ2Hjxu9fP20xeUpYSIkV-yXv_WDWmAJg7cR9PnH1IVub37YWBTojGNVVa31TktxOA_TuYSGoDp0n2Ft6YYFNaKmvnhZALRfOYdbv1KNRDHdWTwT-hFlHvFdQLVsxxxA4t4Hoc5uGczRst0TECifZEAA6AiTC-1KMLCaCJ_VyHfmq8NzITAU6gp7IyKXD0wezteBxie-6fJcASW-ACtKwS2Kld7WGLL_J0u9pKnWlsDiis0gjQSx9jrL-DJ4pYFHkIUFw0F9XBuF2vodKkwUy9ROAir1TrrLuNd9JWiMbYuM58CyWACj-wjBXFz5qjGDTj3rVd2sbow0GUgU_ah3pGSLNnKrwGy-QZik5SbKCBydWpaJDtiOyYDWskdBv1c9mpUM9ZhVcTbK-nmjD8_EO4E99VXYkSM68jqHLJ0k-A_kbL5ksTXMEVj9t2gPjEvVghH3zPMzsQN2ghs3-pzB_Ij6ld98J4bhsJ2uCc5Aa13UzCJNTRzsTDWE8P_plA3aoT4fprhiJ1cHHSMecbV-_ZqgQCeBclUM4bNtkyj5rGy4";
 
-    window.showToast("Connecting to MetaApi Cloud...", "info");
+  window.getMetaApiToken = () => {
+    return localStorage.getItem("META_API_TOKEN") || DEFAULT_META_API_TOKEN;
+  };
+
+  window.setMetaApiToken = (tokenStr) => {
+    if (!tokenStr || typeof tokenStr !== 'string') {
+      console.error("Invalid token string provided.");
+      return;
+    }
+    localStorage.setItem("META_API_TOKEN", tokenStr.trim());
+    console.log("New MetaApi token saved to localStorage successfully.");
+  };
+
+  // 2. Main Direct Sync Function
+  window.syncMetaApiTrades = async () => {
+    const acc = (typeof userData !== 'undefined' && userData.accounts) ? userData.accounts[activeAccIndex] : null;
+    if (!acc) {
+      if (typeof window.showToast === 'function') window.showToast("No active account selected", "error");
+      return;
+    }
+
+    if (typeof window.showToast === 'function') window.showToast("Connecting directly to MetaApi Cloud...", "info");
+
+    const activeToken = window.getMetaApiToken();
 
     try {
-      // Step 1: Get provisioned accounts via Proxy
-      const accsRes = await fetch(`/api/metaapi?endpoint=${encodeURIComponent("/user/accounts")}&token=${encodeURIComponent(META_API_TOKEN)}`);
-      
-      if (!accsRes.ok) throw new Error("MetaApi Authentication Failed");
-      const metaAccounts = await accsRes.json();
-      
-      if (!metaAccounts || metaAccounts.length === 0) {
-        throw new Error("No provisioned MetaApi accounts found");
+      // Step A: Fetch provisioned MetaApi accounts directly from MetaApi Cloud
+      const accsRes = await fetch("https://mt-provisioning-api-v1.agium-cl.mql5.net/users/current/accounts", {
+        method: "GET",
+        headers: {
+          "auth-token": activeToken,
+          "Accept": "application/json"
+        }
+      });
+
+      if (!accsRes.ok) {
+        if (accsRes.status === 401 || accsRes.status === 403) {
+          throw new Error("Auth Failed: Token expired/invalid. Update via console: setMetaApiToken('NEW_TOKEN')");
+        }
+        throw new Error(`Provisioning API returned HTTP ${accsRes.status}`);
       }
 
-      // Match account by MT5 Login ID or fall back to first MetaApi account
+      const metaAccounts = await accsRes.json();
+      if (!Array.isArray(metaAccounts) || metaAccounts.length === 0) {
+        throw new Error("No provisioned accounts found on this MetaApi account");
+      }
+
+      // Match target account by MT5 Login or pick the first available
       let metaAcc = metaAccounts.find(a => acc.mt5 && acc.mt5.login && String(a.login) === String(acc.mt5.login));
       if (!metaAcc) metaAcc = metaAccounts[0];
 
-      // Step 2: Fetch trade deals / history via Proxy
-      const historyEndpoint = `/user/accounts/${metaAcc.id}/historical-trades/deals?startTime=2020-01-01T00:00:00.000Z`;
-      const historyRes = await fetch(`/api/metaapi?endpoint=${encodeURIComponent(historyEndpoint)}&token=${encodeURIComponent(META_API_TOKEN)}`);
+      const region = metaAcc.region || 'new-york';
+      const dealsUrl = `https://mt-client-api-v1.${region}.agium-cl.mql5.net/users/current/accounts/${metaAcc.id}/historical-trades/deals?startTime=2020-01-01T00:00:00.000Z`;
 
-      if (!historyRes.ok) throw new Error("Failed to pull MetaApi trade deals");
+      // Step B: Fetch trade deals directly from region client node
+      const historyRes = await fetch(dealsUrl, {
+        method: "GET",
+        headers: {
+          "auth-token": activeToken,
+          "Accept": "application/json"
+        }
+      });
+
+      if (!historyRes.ok) {
+        throw new Error(`Client API returned HTTP ${historyRes.status}`);
+      }
+
       const data = await historyRes.json();
-      const deals = data.deals || data || [];
+      const deals = Array.isArray(data) ? data : (data.deals || []);
 
       let importedCount = 0;
       if (!acc.trades) acc.trades = [];
 
+      // Step C: Process trade entries and calculate parameters
       deals.forEach(deal => {
         if (deal.entryType === 'DEAL_ENTRY_OUT' && deal.profit !== 0) {
-          const exists = acc.trades.some(t => t.id === `meta_${deal.id}`);
-          if (!exists) {
-            const pnl = parseFloat(deal.profit) + parseFloat(deal.swap || 0) + parseFloat(deal.commission || 0);
-            const isWin = pnl >= 0;
-            const riskAmt = (acc.balance * (acc.riskPercent || 1)) / 100;
-            const rr = isWin ? parseFloat((pnl / (riskAmt || 1)).toFixed(2)) : -1;
+          const tradeId = `meta_${deal.id}`;
+          const exists = acc.trades.some(t => t.id === tradeId);
 
-            // Push imported trade into account
+          if (!exists) {
+            const netPnl = parseFloat(deal.profit) + parseFloat(deal.swap || 0) + parseFloat(deal.commission || 0);
+            const isWin = netPnl >= 0;
+            const riskAmt = (acc.balance * (acc.riskPercent || 1)) / 100;
+            const calculatedRR = isWin ? parseFloat((netPnl / (riskAmt || 1)).toFixed(2)) : -1;
+
             acc.trades.push({
-              id: `meta_${deal.id}`,
-              pair: deal.symbol,
-              type: deal.type === 'DEAL_TYPE_BUY' ? 'BUY' : 'SELL',
-              pnl: pnl,
-              rr: rr,
-              date: deal.time ? new Date(deal.time).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-              source: 'MetaApi'
+              id: tradeId,
+              pair: deal.symbol || 'UNKNOWN',
+              direction: (deal.type === 'DEAL_TYPE_BUY' || deal.type === 0) ? 'Long' : 'Short',
+              outcome: isWin ? 'Profit' : 'Loss',
+              pnl: parseFloat(netPnl.toFixed(2)),
+              rr: calculatedRR,
+              date: deal.time ? new Date(deal.time).toISOString() : new Date().toISOString(),
+              reason: 'Synced via MetaApi'
             });
             importedCount++;
-          } // <--- Closes if (!exists)
-        } // <--- Closes if (deal.entryType...)
-      }); // <--- Closes deals.forEach()
+          }
+        }
+      });
 
+      // Step D: Save and sync UI
       if (importedCount > 0) {
-        if (typeof window.saveUserData === 'function') window.saveUserData();
-        if (typeof window.renderAll === 'function') window.renderAll();
-        window.showToast(`Synced ${importedCount} new trades!`, "success");
+        if (typeof saveUserData === 'function') await saveUserData();
+        if (typeof updateDashboard === 'function') updateDashboard();
+        if (typeof renderJournal === 'function') renderJournal();
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof window.showToast === 'function') window.showToast(`Synced ${importedCount} new trade(s)!`, "success");
       } else {
-        window.showToast("No new trades to sync", "info");
+        if (typeof window.showToast === 'function') window.showToast("No new trades found to sync", "info");
       }
 
-    } catch (err) { // <--- Catch block for try
-      console.error("MetaApi Sync Error:", err);
-      window.showToast(err.message || "Sync failed", "error");
-    } // <--- Closes catch
-}; // <--- ASYNC FUNCTION ENDS HERE
+    } catch (err) {
+      console.error("MetaApi Engine Failure:", err);
+      if (typeof window.showToast === 'function') window.showToast(err.message || "Sync failed", "error");
+    }
+  };
+</script>
+ // <--- ASYNC FUNCTION ENDS HERE
 
   /* ── PERFORMANCE CARD EXPORT (html2canvas) ── */
   window.generateMonthlyPerformance = async () => {
